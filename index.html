@@ -1,411 +1,3124 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="css/leaflet.css">
-        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
-        <link rel="stylesheet" href="css/qgis2web.css">
-        <link rel="stylesheet" href="css/fontawesome-all.min.css">
-        <link rel="stylesheet" href="css/leaflet.photon.css">
-        <link rel="stylesheet" href="css/leaflet-measure.css">
-        <style>
-        html, body, #map {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            margin: 0;
-        }
-        </style>
-        <title></title>
-    </head>
-    <body>
-        <div id="map">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>SEKO FIELD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #111827, #020617);
+      color: #e5e7eb;
+      position: relative; /* ⭐ container untuk sidebar absolut */
+    }  
+
+
+    .sidebar {
+      position: absolute;          /* ⭐ melayang di atas map */
+      top: 12px;
+      left: 12px;
+      bottom: 12px;
+
+      width: 360px;
+      max-width: 95vw;
+
+    background:
+      radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.25), transparent 60%),
+      radial-gradient(circle at 100% 0, rgba(129, 140, 248, 0.22), transparent 65%),
+      linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.96));
+
+    /* dulu cuma border-right, sekarang full border keliling */
+    border: 1px solid rgba(148, 163, 184, 0.7);
+
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+
+    box-shadow:
+      0 22px 50px rgba(0, 0, 0, 0.9),
+      0 0 0 1px rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(20px);
+
+    border-radius: 18px;   /* ⭐ sudut melengkung seperti widget */
+    overflow: hidden;      /* isi tidak keluar dari radius */
+    margin: 0;             /* jangan pakai margin lagi */
+  }
+
+
+
+    .sidebar-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.5);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-title-main {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .sidebar-subtitle-main {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 10px 10px 10px;
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 transparent;
+    }
+
+    .sidebar-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar-body::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 999px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(148, 163, 184, 0.4);
+    }
+
+    h3.section-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .section-desc {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    label {
+      font-size: 11px;
+      color: #d1d5db;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.7);
+      color: #e5e7eb;
+      font-size: 11px;
+      padding: 6px 10px;
+      margin-bottom: 5px;
+      outline: none;
+    }
+
+    textarea {
+      border-radius: 10px;
+      min-height: 40px;
+      resize: vertical;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      font-size: 11px;
+      margin-bottom: 5px;
+      color: #e5e7eb;
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #6b7280;
+    }
+
+    .row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .row > div {
+      flex: 1;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      cursor: pointer;
+      background: #22c55e;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      margin-top: 3px;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      color: #e5e7eb;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 10px;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+    }
+
+    .btn-secondary {
+      background: #3b82f6;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.9);
+      margin-top: 4px;
+    }
+
+    .empty-state {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+    }
+
+    #point-list,
+    #layer-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .point-item,
+    .layer-item {
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 14px;
+      padding: 6px 8px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .item-title {
+      font-size: 12px;
+      font-weight: 600;
+      max-width: 180px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-sub {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .coords {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .note-text {
+      font-size: 10px;
+      color: #e5e7eb;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .layer-style-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+    }
+
+    .layer-style-row input[type="color"] {
+      padding: 0;
+      margin: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      width: 22px;
+      height: 16px;
+      background: transparent;
+    }
+
+    .layer-style-row input[type="range"] {
+      flex: 1;
+    }
+
+    .map-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+      background: #020617;
+    }
+
+    /* ===== DOCK ala macOS Tahoe (DI BAWAH) ===== */
+    .map-top-bar {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 900;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      padding: 8px 16px;
+      border-radius: 999px;
+
+      background:
+        radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.28), transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(129, 140, 248, 0.24), transparent 55%),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.94));
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.75),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(18px);
+    }
+
+    .dock-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin: 0 2px;
+
+      font-size: 16px;
+      line-height: 1;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+
+      background:
+        radial-gradient(circle at 30% 0, rgba(248, 250, 252, 0.25), transparent 65%),
+        rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      color: #e5e7eb;
+      cursor: pointer;
+
+      transition:
+        transform 0.18s ease-out,
+        box-shadow 0.18s ease-out,
+        background 0.18s ease-out,
+        border-color 0.18s ease-out,
+        color 0.18s ease-out;
+    }
+
+    .dock-btn:hover {
+      transform: translateY(-3px) scale(1.14);
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.85);
+      background:
+        radial-gradient(circle at 30% 0, rgba(248, 250, 252, 0.30), transparent 65%),
+        rgba(15, 23, 42, 1);
+    }
+
+    .dock-btn.btn-toggle-active {
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+      border-color: #22c55e;
+      color: #022c22;
+      box-shadow: 0 12px 24px rgba(34, 197, 94, 0.55);
+    }
+
+    .dock-btn.btn-danger {
+      background: linear-gradient(135deg, #ef4444, #fb7185);
+      border-color: #ef4444;
+      color: #f9fafb;
+      box-shadow: 0 14px 30px rgba(239, 68, 68, 0.7);
+    }
+
+    .map-measure-info {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 900;
+    }
+
+    /* Bar teks di atas dock DISABLE */
+    .map-bottom-bar {
+      display: none; /* disembunyikan sesuai permintaan */
+    }
+
+    .chip.measure-chip {
+      font-size: 11px;
+    }
+
+    @media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+
+    .sidebar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;                /* ⭐ jangan pakai top lagi */
+        width: 100%;
+        max-width: 100%;
+        height: 72%;
+
+        border-right: none;
+        border-top: 1px solid rgba(148, 163, 184, 0.6);
+        border-radius: 16px 16px 0 0;
+        transform: translateY(0);
+        transition: transform 0.25s ease-out;
+        margin: 0;                /* pastikan nempel ke pinggir */
+      }
+    }
+
+
+      .sidebar.hidden {
+        transform: translateY(100%);
+      }
+
+      .map-top-bar {
+        bottom: 12px;
+      }
+
+      .map-measure-info {
+        top: 10px;
+      }
+    
+
+    .leaflet-popup-content {
+      margin: 6px 8px;
+      font-size: 12px;
+    }
+
+    #attr-container {
+      font-size: 11px;
+    }
+
+    #attr-container table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4px;
+    }
+
+    #attr-container th,
+    #attr-container td {
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      padding: 3px 5px;
+      text-align: left;
+      word-break: break-word;
+    }
+
+    #attr-container th {
+      background: rgba(31, 41, 55, 0.9);
+    }
+
+    #attr-container tr[data-field-name]:hover {
+      background: rgba(55, 65, 81, 0.7);
+      cursor: pointer;
+    }
+
+    .feature-label {
+      background: rgba(15, 23, 42, 0.85);
+      color: #f9fafb;
+      border-radius: 999px;
+      padding: 1px 6px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 10px;
+    }
+
+    
+/* ===== WIDGET PRO – Windows 7 style gadgets ===== */
+.widget-stack {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+}
+
+.widget-gadget {
+  width: 230px;
+  background:
+    radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.45), transparent 55%),
+    radial-gradient(circle at 100% 0, rgba(30, 64, 175, 0.45), transparent 60%),
+    rgba(15, 23, 42, 0.92);
+  border-radius: 14px;
+  box-shadow:
+    0 18px 35px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.9);
+  overflow: hidden;
+  backdrop-filter: blur(18px);
+  font-size: 11px;
+  color: #f9fafb;
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 3px 8px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.14),
+    rgba(31, 41, 55, 0.4)
+  );
+  border-bottom: 1px solid rgba(15, 23, 42, 0.95);
+}
+
+.widget-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+
+.widget-content {
+  padding: 6px 8px 8px 8px;
+  line-height: 1.45;
+}
+
+.widget-content div {
+  margin-bottom: 2px;
+}
+
+.widget-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.widget-controls .btn-sm {
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.widget-gadget.collapsed .widget-content {
+  display: none;
+}
+
+body.light-theme .widget-gadget {
+  background:
+    radial-gradient(circle at 0 0, rgba(191, 219, 254, 0.7), transparent 60%),
+    radial-gradient(circle at 100% 0, rgba(165, 180, 252, 0.7), transparent 60%),
+    rgba(249, 250, 251, 0.98);
+  border-color: #cbd5e1;
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.9),
+    inset 0 0 0 0.6px rgba(255, 255, 255, 0.5);
+  color: #111827;
+}
+
+body.light-theme .widget-header {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.8),
+    rgba(209, 213, 219, 0.9)
+  );
+  border-bottom-color: rgba(209, 213, 219, 0.9);
+}
+
+body.light-theme .widget-title {
+  color: #111827;
+  text-shadow: none;
+}
+
+/* ===== MODAL TITIK (ikuti tema) ===== */
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(15, 23, 42, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.hidden {
+      display: none;
+    }
+
+    .modal-panel {
+      width: 320px;
+      max-width: 90vw;
+      background:
+        radial-gradient(circle at 0 0, rgba(56,189,248,0.22), transparent 60%),
+        radial-gradient(circle at 100% 0, rgba(129,140,248,0.22), transparent 60%),
+        rgba(15, 23, 42, 0.98);
+      border-radius: 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      box-shadow:
+        0 22px 48px rgba(0,0,0,0.85),
+        0 0 0 1px rgba(15,23,42,0.9);
+      backdrop-filter: blur(20px);
+    }
+
+    .modal-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .modal-panel label {
+      margin-top: 4px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    /* ===== LIGHT THEME ===== */
+    body.light-theme {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    body.light-theme .app {
+      background: radial-gradient(circle at top, #f9fafb, #e5e7eb);
+      color: #111827;
+    }
+
+    body.light-theme .sidebar {
+      background:
+        radial-gradient(circle at 0 0, rgba(59,130,246,0.18), transparent 60%),
+        radial-gradient(circle at 100% 0, rgba(129,140,248,0.22), transparent 60%),
+        linear-gradient(135deg, #f9fafb, #e5e7eb);
+      border-right-color: #cbd5e1;
+      box-shadow:
+        0 22px 40px rgba(15,23,42,0.25),
+        0 0 0 1px rgba(255,255,255,0.9);
+    }
+
+    body.light-theme .sidebar-title-main {
+      color: #111827;
+    }
+
+    body.light-theme .sidebar-subtitle-main {
+      color: #6b7280;
+    }
+
+    body.light-theme .sidebar-section {
+      border-bottom-color: rgba(148, 163, 184, 0.4);
+    }
+
+    body.light-theme label {
+      color: #374151;
+    }
+
+    body.light-theme input[type="number"],
+    body.light-theme input[type="text"],
+    body.light-theme select,
+    body.light-theme textarea {
+      background: rgba(255, 255, 255, 0.9);
+      color: #111827;
+      border-color: #cbd5e1;
+    }
+
+    body.light-theme input::placeholder,
+    body.light-theme textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    body.light-theme .point-item,
+    body.light-theme .layer-item {
+      background: rgba(248, 250, 252, 0.95);
+      border-color: #e5e7eb;
+    }
+
+    body.light-theme .item-sub,
+    body.light-theme .coords {
+      color: #6b7280;
+    }
+
+    body.light-theme .chip {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: #cbd5e1;
+      color: #111827;
+    }
+
+    body.light-theme #attr-container th {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    body.light-theme #attr-container td {
+      border-color: #e5e7eb;
+    }
+
+    body.light-theme .feature-label {
+      background: rgba(15, 23, 42, 0.9);
+      color: #f9fafb;
+    }
+
+    body.light-theme .btn-outline {
+      background: #ffffff;
+      color: #111827;
+      border-color: #cbd5e1;
+    }
+
+    body.light-theme .widget-box {
+      background: rgba(248, 250, 252, 0.98);
+      color: #111827;
+      box-shadow: 0 0 10px rgba(15,23,42,0.25);
+    }
+
+    body.light-theme .map-top-bar {
+      background:
+        radial-gradient(circle at 0 0, rgba(59, 130, 246, 0.14), transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(129, 140, 248, 0.18), transparent 55%),
+        linear-gradient(135deg, #f9fafb, #e5e7eb);
+      border-color: #cbd5e1;
+      box-shadow:
+        0 18px 40px rgba(15, 23, 42, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.9);
+    }
+
+    body.light-theme .map-top-bar .dock-btn {
+      background:
+        radial-gradient(circle at 30% 0, rgba(255, 255, 255, 0.85), transparent 70%),
+        #e5e7eb;
+      border-color: #cbd5e1;
+      color: #111827;
+    }
+
+    body.light-theme .map-top-bar .dock-btn:hover {
+      background:
+        radial-gradient(circle at 30% 0, rgba(255, 255, 255, 1), transparent 70%),
+        #f3f4f6;
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.30);
+    }
+
+    body.light-theme .map-top-bar .dock-btn.btn-toggle-active {
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+      border-color: #22c55e;
+      color: #022c22;
+    }
+
+    body.light-theme .modal-panel {
+      background:
+        radial-gradient(circle at 0 0, rgba(59,130,246,0.18), transparent 60%),
+        radial-gradient(circle at 100% 0, rgba(129,140,248,0.2), transparent 60%),
+        rgba(248,250,252,0.98);
+      color: #111827;
+      border-color: #cbd5e1;
+      box-shadow:
+        0 18px 40px rgba(15,23,42,0.25),
+        0 0 0 1px rgba(255,255,255,0.9);
+    }
+
+    body.light-theme .modal-panel input,
+    body.light-theme .modal-panel textarea {
+      background: rgba(255,255,255,0.95);
+      color: #111827;
+      border-color: #cbd5e1;
+    }
+  
+/* === IMPROVE WIDGET VISIBILITY === */
+.widget-gadget {
+  font-size: 12px;
+}
+
+.widget-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.widget-content {
+  padding: 8px 10px 10px 10px;
+}
+
+#widgetTime,
+#widgetWeather,
+#widgetSun,
+#widgetCoord,
+#widgetElevation,
+#widgetCompass,
+#widgetSpeed {
+  font-weight: 600;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+}
+
+body.light-theme #widgetTime,
+body.light-theme #widgetWeather,
+body.light-theme #widgetSun,
+body.light-theme #widgetCoord,
+body.light-theme #widgetElevation,
+body.light-theme #widgetCompass,
+body.light-theme #widgetSpeed {
+  text-shadow: none;
+}
+
+/* ===== NAVIGATOR CONTROL (ARC GIS STYLE) ===== */
+.navigator-wrapper {
+  position: absolute;
+  top: 50%;
+  right: 3%;
+  transform: translateY(-50%);
+  z-index: 950;
+  pointer-events: none;
+}
+
+.navigator-inner {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.8);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.6);
+  background: radial-gradient(circle, rgba(15,23,42,0.7) 0%, rgba(15,23,42,0.2) 55%, transparent 70%);
+  position: relative;
+
+  /* enable interaction on ring */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.nav-ring {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.7);
+}
+
+.nav-arrow-n {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 16px solid rgba(255,255,255,0.9);
+}
+
+.nav-btn-dir {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15,23,42,0.85);
+  color: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.nav-btn-dir:hover {
+  background: rgba(37,99,235,0.95);
+}
+
+.nav-btn-dir[data-dir="n"] { top: 12px; left: 50%; transform: translateX(-50%); }
+.nav-btn-dir[data-dir="s"] { bottom: 12px; left: 50%; transform: translateX(-50%); }
+.nav-btn-dir[data-dir="w"] { left: 12px; top: 50%; transform: translateY(-50%); }
+.nav-btn-dir[data-dir="e"] { right: 12px; top: 50%; transform: translateY(-50%); }
+
+.nav-zoom-box {
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-zoom-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(15,23,42,0.9);
+  color: #f9fafb;
+  font-size: 20px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+}
+
+.nav-zoom-btn:hover {
+  background: rgba(37,99,235,0.95);
+}
+
+@media (max-width: 768px) {
+  .navigator-wrapper {
+    display: none;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div>
+        <div class="sidebar-title-main" id="sidebarTitleMain">
+          WebGIS UTM • GPX • SHP • GeoTIFF • Offline Tiles
         </div>
-        <script src="js/qgis2web_expressions.js"></script>
-        <script src="js/leaflet.js"></script>
-        <script src="js/L.Control.Layers.Tree.min.js"></script>
-        <script src="js/leaflet.rotatedMarker.js"></script>
-        <script src="js/leaflet.pattern.js"></script>
-        <script src="js/leaflet-hash.js"></script>
-        <script src="js/Autolinker.min.js"></script>
-        <script src="js/rbush.min.js"></script>
-        <script src="js/labelgun.min.js"></script>
-        <script src="js/labels.js"></script>
-        <script src="js/leaflet.photon.js"></script>
-        <script src="js/leaflet-measure.js"></script>
-        <script src="data/PUSKESMAS_PT_50K_5.js"></script>
-        <script src="data/ADMINISTRASI_LN_50K_6.js"></script>
-        <script>
-        var highlightLayer;
-        function highlightFeature(e) {
-            highlightLayer = e.target;
+        <div class="sidebar-subtitle-main" id="sidebarSubtitleMain">
+          Klik peta / input UTM / upload file
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm toggle-sidebar-btn" id="toggleSidebarBtn">
+        🗺️ Layar Penuh
+      </button>
+    </div>
 
-            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
-              highlightLayer.setStyle({
-                color: '#ffff00',
-              });
-            } else {
-              highlightLayer.setStyle({
-                fillColor: '#ffff00',
-                fillOpacity: 1
-              });
-            }
-        }
-        var map = L.map('map', {
-            zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[-3.82592225367352,114.33204345434572],[-2.728282430639752,115.96815144818504]]);
-        var hash = new L.Hash(map);
-        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
-        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
-        // remove popup's row if "visible-with-data"
-        function removeEmptyRowsFromPopupContent(content, feature) {
-         var tempDiv = document.createElement('div');
-         tempDiv.innerHTML = content;
-         var rows = tempDiv.querySelectorAll('tr');
-         for (var i = 0; i < rows.length; i++) {
-             var td = rows[i].querySelector('td.visible-with-data');
-             var key = td ? td.id : '';
-             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
-                 rows[i].parentNode.removeChild(rows[i]);
-             }
-         }
-         return tempDiv.innerHTML;
-        }
-        // add class to format popup if it contains media
-		function addClassToPopupIfMedia(content, popup) {
-			var tempDiv = document.createElement('div');
-			tempDiv.innerHTML = content;
-			if (tempDiv.querySelector('td img')) {
-				popup._contentNode.classList.add('media');
-					// Delay to force the redraw
-					setTimeout(function() {
-						popup.update();
-					}, 10);
-			} else {
-				popup._contentNode.classList.remove('media');
-			}
-		}
-        var zoomControl = L.control.zoom({
-            position: 'topleft'
-        }).addTo(map);
-        var measureControl = new L.Control.Measure({
-            position: 'topleft',
-            primaryLengthUnit: 'meters',
-            secondaryLengthUnit: 'kilometers',
-            primaryAreaUnit: 'sqmeters',
-            secondaryAreaUnit: 'hectares'
-        });
-        measureControl.addTo(map);
-        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
-        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
-        var bounds_group = new L.featureGroup([]);
-        function setBounds() {
-        }
-        map.createPane('pane_GoogleRoad_0');
-        map.getPane('pane_GoogleRoad_0').style.zIndex = 400;
-        var layer_GoogleRoad_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-            pane: 'pane_GoogleRoad_0',
-            opacity: 1.0,
-            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 20
-        });
-        layer_GoogleRoad_0;
-        map.addLayer(layer_GoogleRoad_0);
-        map.createPane('pane_GoogleLabels_1');
-        map.getPane('pane_GoogleLabels_1').style.zIndex = 401;
-        var layer_GoogleLabels_1 = L.tileLayer('https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
-            pane: 'pane_GoogleLabels_1',
-            opacity: 1.0,
-            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 20
-        });
-        layer_GoogleLabels_1;
-        map.addLayer(layer_GoogleLabels_1);
-        map.createPane('pane_GoogleRoad_2');
-        map.getPane('pane_GoogleRoad_2').style.zIndex = 402;
-        var layer_GoogleRoad_2 = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-            pane: 'pane_GoogleRoad_2',
-            opacity: 1.0,
-            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 20
-        });
-        layer_GoogleRoad_2;
-        map.addLayer(layer_GoogleRoad_2);
-        map.createPane('pane_GoogleLabels_3');
-        map.getPane('pane_GoogleLabels_3').style.zIndex = 403;
-        var layer_GoogleLabels_3 = L.tileLayer('https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
-            pane: 'pane_GoogleLabels_3',
-            opacity: 1.0,
-            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 20
-        });
-        layer_GoogleLabels_3;
-        map.addLayer(layer_GoogleLabels_3);
-        map.createPane('pane_OpenMap_4');
-        map.getPane('pane_OpenMap_4').style.zIndex = 404;
-        var layer_OpenMap_4 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            pane: 'pane_OpenMap_4',
-            opacity: 1.0,
-            attribution: '',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 18
-        });
-        layer_OpenMap_4;
-        map.addLayer(layer_OpenMap_4);
-        function pop_PUSKESMAS_PT_50K_5(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    for (var i in e.target._eventParents) {
-                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
-                            e.target._eventParents[i].resetStyle(e.target);
-                        }
-                    }
-                },
-                mouseover: highlightFeature,
-            });
-            var popupContent = '<table>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['NAMOBJ'] !== null ? autolinker.link(String(feature.properties['NAMOBJ']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['FCODE'] !== null ? autolinker.link(String(feature.properties['FCODE']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['LCODE'] !== null ? autolinker.link(String(feature.properties['LCODE']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['SRS_ID'] !== null ? autolinker.link(String(feature.properties['SRS_ID']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['REMARK'] !== null ? autolinker.link(String(feature.properties['REMARK']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['METADATA'] !== null ? autolinker.link(String(feature.properties['METADATA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['KWKPKM_'] !== null ? autolinker.link(String(feature.properties['KWKPKM_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['KMPPKM_'] !== null ? autolinker.link(String(feature.properties['KMPPKM_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['JPLPKM_'] !== null ? autolinker.link(String(feature.properties['JPLPKM_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['PKMKODE_'] !== null ? autolinker.link(String(feature.properties['PKMKODE_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['PKMKAT_'] !== null ? autolinker.link(String(feature.properties['PKMKAT_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['PKMLMT_'] !== null ? autolinker.link(String(feature.properties['PKMLMT_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                </table>';
-            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
-			layer.on('popupopen', function(e) {
-				addClassToPopupIfMedia(content, e.popup);
-			});
-			layer.bindPopup(content, { maxHeight: 400 });
-        }
+    <div class="sidebar-body">
+      <!-- PROYEK -->
+      <div class="sidebar-section">
+        <h3 class="section-title" id="secProjectTitle">Proyek</h3>
+        <div class="section-desc" id="secProjectDesc">
+          Simpan / muat proyek lokal (titik + pengaturan). Layer file tetap perlu diupload ulang.
+        </div>
+        <div class="item-actions" style="margin-bottom:4px;">
+          <button class="btn btn-sm btn-secondary" id="btnSaveProject">💾 Simpan Proyek</button>
+          <button class="btn btn-sm btn-outline" id="btnLoadProject">📂 Muat Proyek</button>
+        </div>
+        <div class="item-actions">
+          <button class="btn btn-sm btn-outline" id="btnExportPointsCsv">⬇ Export Titik (CSV)</button>
+        </div>
+      </div>
 
-        function style_PUSKESMAS_PT_50K_5_0() {
+      <!-- BASEMAP -->
+      <div class="sidebar-section">
+        <h3 class="section-title" id="secBasemapTitle">Basemap</h3>
+        <div class="section-desc" id="secBasemapDesc">
+          Pilih OSM, citra ESRI, atau tiles offline (XYZ).
+        </div>
+        <label for="basemapSelect" id="labelBasemapType">Tipe Basemap</label>
+        <select id="basemapSelect">
+          <option value="osm">OpenStreetMap (Jalan)</option>
+          <option value="satellite">Citra Satelit (ESRI)</option>
+          <option value="offline">Offline Tiles (XYZ)</option>
+        </select>
+
+        <label for="offlineTileUrl" style="margin-top:6px;" id="labelOfflineUrl">URL Tiles Offline</label>
+        <input
+          type="text"
+          id="offlineTileUrl"
+          placeholder="tiles/{z}/{x}/{y}.png"
+          value="tiles/{z}/{x}/{y}.png"
+        />
+        <div class="chip" id="chipOfflineHint">
+          📁 Letakkan folder <b>tiles/</b> di sebelah index.html. Contoh: tiles/{z}/{x}/{y}.png
+        </div>
+      </div>
+
+      <!-- INPUT TITIK UTM -->
+      <div class="sidebar-section">
+        <h3 class="section-title" id="secUtmTitle">Tambah Titik via Koordinat UTM</h3>
+        <div class="section-desc" id="secUtmDesc">
+          Masukkan zona, belahan, Easting, Northing, nama &amp; catatan.
+        </div>
+        <label id="labelUtmName">Nama Titik</label>
+        <input type="text" id="utmName" placeholder="Misal: Plot 01 / KM 46" />
+
+        <div class="row">
+          <div>
+            <label id="labelUtmZone">Zona UTM</label>
+            <input type="number" id="utmZone" placeholder="50" />
+          </div>
+          <div>
+            <label id="labelUtmHemisphere">Belahan</label>
+            <select id="utmHemisphere">
+              <option value="N">Utara (N)</option>
+              <option value="S" selected>Selatan (S)</option>
+            </select>
+          </div>
+        </div>
+
+        <label id="labelUtmEasting">Easting (m)</label>
+        <input type="number" id="utmEasting" placeholder="Misal: 450000" />
+
+        <label id="labelUtmNorthing">Northing (m)</label>
+        <input type="number" id="utmNorthing" placeholder="Misal: 9820000" />
+
+        <label id="labelUtmNote">Catatan Titik</label>
+        <textarea id="utmNote" placeholder="Misal: KM 46, kondisi jalan rusak ringan"></textarea>
+
+        <button class="btn" id="btnAddUtm">
+          ➕ Tambah Titik UTM
+        </button>
+      </div>
+
+      <!-- UPLOAD DATA -->
+      <div class="sidebar-section">
+        <h3 class="section-title" id="secUploadTitle">Upload GPX, Shapefile &amp; GeoTIFF</h3>
+        <div class="section-desc" id="secUploadDesc">
+          <b>GPX</b>: track / waypoint.<br>
+          <b>Shapefile</b>: upload <b>.zip</b> berisi SHP, DBF, SHX, PRJ.<br>
+          <b>GeoTIFF</b>: raster .tif / .tiff (harus GeoTIFF).
+        </div>
+
+        <label for="gpxFile" id="labelGpxFile">File GPX</label>
+        <input type="file" id="gpxFile" accept=".gpx" />
+        <button class="btn btn-outline btn-sm" id="btnLoadGpx">
+          📍 Tampilkan GPX
+        </button>
+
+        <label for="shpFile" style="margin-top:6px;" id="labelShpFile">File Shapefile (.zip)</label>
+        <input type="file" id="shpFile" accept=".zip" />
+        <button class="btn btn-outline btn-sm" id="btnLoadShp">
+          🗺️ Tampilkan Shapefile
+        </button>
+
+        <label for="tiffFile" style="margin-top:6px;" id="labelTiffFile">File GeoTIFF (.tif / .tiff)</label>
+        <input type="file" id="tiffFile" accept=".tif,.tiff" />
+        <button class="btn btn-outline btn-sm" id="btnLoadTiff">
+          🛰️ Tampilkan GeoTIFF
+        </button>
+
+        <div class="chip" id="chipTiffHint">
+          ⚠️ TIFF harus GeoTIFF. Untuk performa, buat versi web/resample lebih kecil dulu.
+        </div>
+      </div>
+
+      <!-- LAYER DATA -->
+      <div class="sidebar-section">
+        <h3 class="section-title" id="secLayerTitle">Layer Data (GPX / SHP / GeoTIFF)</h3>
+        <div class="section-desc" id="secLayerDesc">
+          Zoom, atur style (SHP), export GeoJSON, atau hapus layer.
+        </div>
+        <ul id="layer-list"></ul>
+        <div class="empty-state" id="layerEmptyState">
+          Belum ada layer. Upload GPX / Shapefile / GeoTIFF.
+        </div>
+      </div>
+
+      <!-- PENGATURAN LABEL -->
+      <div class="sidebar-section">
+        <h3 class="section-title" id="secLabelTitle">Pengaturan Label Shapefile</h3>
+        <div class="section-desc" id="secLabelDesc">
+          Pilih field atribut untuk label, dan atur label tampil / disembunyikan.<br>
+          Tip: klik baris field di Attribute Table untuk menjadikannya label.
+        </div>
+        <label for="labelFieldSelect" id="labelLabelField">Field Label</label>
+        <select id="labelFieldSelect">
+          <option value="">(Otomatis dari data)</option>
+        </select>
+        <label style="margin-top:4px; display:flex; align-items:center; gap:6px; font-size:11px;">
+          <input type="checkbox" id="toggleLabels" checked style="width:auto; margin:0;" />
+          <span id="textToggleLabels">Tampilkan label di peta</span>
+        </label>
+      </div>
+
+      <!-- ATTRIBUTE TABLE -->
+      <div class="sidebar-section">
+        <h3 class="section-title" id="secAttrTitle">Attribute Feature Terpilih</h3>
+        <div class="section-desc" id="secAttrDesc">
+          Klik polygon / garis / titik dari Shapefile untuk lihat atribut &amp; luas (jika polygon).<br>
+          Klik salah satu baris field untuk menjadikannya label.
+        </div>
+        <div id="attr-container">
+          <div class="empty-state" id="attrEmptyState">
+            Belum ada feature terpilih.
+          </div>
+        </div>
+      </div>
+
+      <!-- DAFTAR TITIK -->
+      <div class="sidebar-section">
+        <h3 class="section-title" id="secPointsTitle">Daftar Titik</h3>
+        <div class="section-desc" id="secPointsDesc">
+          Titik dari klik peta &amp; input UTM tampil di sini. Bisa zoom, edit, hapus.
+        </div>
+        <ul id="point-list"></ul>
+        <div class="empty-state" id="emptyState">
+          Belum ada titik. Klik peta atau input UTM.
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAP -->
+  <div class="map-wrapper">
+    <div id="map"></div>
+
+    <!-- NAVIGATOR CONTROL -->
+    <div class="navigator-wrapper">
+      <div class="navigator-inner">
+        <div class="nav-ring"></div>
+        <div class="nav-arrow-n"></div>
+
+        <button class="nav-btn-dir" data-dir="n">▲</button>
+        <button class="nav-btn-dir" data-dir="s">▼</button>
+        <button class="nav-btn-dir" data-dir="w">◄</button>
+        <button class="nav-btn-dir" data-dir="e">►</button>
+
+        <div class="nav-zoom-box">
+          <button class="nav-zoom-btn" data-zoom="in">+</button>
+          <button class="nav-zoom-btn" data-zoom="out">−</button>
+        </div>
+      </div>
+    </div>
+
+<!-- WIDGET PRO -->
+<div class="widget-stack">
+  <!-- Gadget 1: Clock -->
+  <div id="widgetBox" class="widget-gadget">
+    <div class="widget-header">
+      <span id="widgetTitleClock" class="widget-title">Jam &amp; Tanggal</span>
+      <div class="widget-controls">
+        <button id="widgetCollapse" class="btn btn-sm btn-outline">−</button>
+      </div>
+    </div>
+    <div class="widget-content">
+      <div id="widgetTime">🕒 --:--</div>
+    </div>
+  </div>
+
+  <!-- Gadget 2: Weather & Sun -->
+  <div class="widget-gadget">
+    <div class="widget-header">
+      <span id="widgetTitleWeather" class="widget-title">Cuaca &amp; Matahari</span>
+    </div>
+    <div class="widget-content">
+      <div id="widgetWeather">🌡️ --°C | --</div>
+      <div id="widgetSun">☀️ Matahari: --</div>
+    </div>
+  </div>
+
+  <!-- Gadget 3: Location & Elevation -->
+  <div class="widget-gadget">
+    <div class="widget-header">
+      <span id="widgetTitleLocation" class="widget-title">Lokasi &amp; Elevasi</span>
+    </div>
+    <div class="widget-content">
+      <div id="widgetCoord">📍 Lat: -- Lon: --</div>
+      <div id="widgetElevation">⛰️ Elevasi: -- m</div>
+    </div>
+  </div>
+
+  <!-- Gadget 4: Motion & Compass -->
+  <div class="widget-gadget">
+    <div class="widget-header">
+      <span id="widgetTitleSystem" class="widget-title">Gerak &amp; Kompas</span>
+    </div>
+    <div class="widget-content">
+      <div id="widgetCompass">🧭 Kompas: --° (--)</div>
+      <div id="widgetSpeed">🚶 Kecepatan: 0 km/jam</div>
+    </div>
+  </div>
+</div>
+
+<!-- DOCK (bawah) -->
+
+    <div class="map-top-bar">
+      <button class="dock-btn" id="btnResetIndonesia" title="Reset Indonesia">🌏</button>
+      <button class="dock-btn" id="btnZoomAllLayers" title="Zoom semua layer">🛰️</button>
+      <button class="dock-btn" id="btnMeasureDistance" title="Ukur jarak / Measure distance">📏</button>
+      <button class="dock-btn" id="btnMeasureArea" title="Ukur luas / Measure area">📐</button>
+      <button class="dock-btn btn-danger" id="btnClearMeasure" title="Hapus ukuran / Clear measurement">❌</button>
+      <button class="dock-btn" id="btnToggleGPS" title="GPS OFF">📡</button>
+      <button class="dock-btn" id="btnTheme" title="Tema terang / Light theme">☀️</button>
+      <button class="dock-btn" id="btnLang" title="Switch to English">🇮🇩</button>
+    </div>
+
+    <div class="map-measure-info">
+      <div class="chip measure-chip" id="measureInfo">
+        Mode: normal • Klik tombol di dock untuk mulai ukur.
+      </div>
+    </div>
+
+    <!-- BOTTOM BAR (disembunyikan via CSS, dibiarkan untuk kompatibilitas) -->
+    <div class="map-bottom-bar">
+      <div class="chip" id="bottomChipText">
+        🖱️ Klik peta = titik • 📐 UTM • 📁 GPX / SHP / TIFF • 🔤 Label fleksibel • 🧮 Luas polygon • 🧭 Widget PRO • 📦 Offline tiles
+      </div>
+    </div>
+
+    <!-- MODAL TITIK KUSTOM -->
+    <div id="pointModalBackdrop" class="modal-backdrop hidden">
+      <div class="modal-panel">
+        <div class="modal-title" id="pointModalTitle">Tambah Titik</div>
+        <label id="pointModalNameLabel" for="pointModalName">Nama titik</label>
+        <input type="text" id="pointModalName" />
+        <label id="pointModalNoteLabel" for="pointModalNote">Catatan titik</label>
+        <textarea id="pointModalNote"></textarea>
+        <div class="modal-actions">
+          <button id="pointModalCancel" class="btn btn-outline btn-sm">Batal</button>
+          <button id="pointModalOk" class="btn btn-sm">Simpan</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LIBRARIES -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.1/proj4.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4leaflet/1.0.2/proj4leaflet.js"></script>
+<script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+<script src="https://unpkg.com/shpjs@4.0.3/dist/shp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/georaster@1.6.2/dist/georaster.browser.bundle.min.js"></script>
+<script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js"></script>
+
+<script>
+  // ======= I18N (Indonesia / English) =======
+  const I18N = {
+    id: {
+      ui: {
+        sidebarTitleMain: 'WebGIS UTM • GPX • SHP • GeoTIFF • Offline Tiles',
+        sidebarSubtitleMain: 'Klik peta / input UTM / upload file',
+        toggleSidebarText: '🗺️ Layar Penuh',
+
+        secProjectTitle: 'Proyek',
+        secProjectDesc: 'Simpan / muat proyek lokal (titik + pengaturan). Layer file tetap perlu diupload ulang.',
+        btnSaveProjectText: '💾 Simpan Proyek',
+        btnLoadProjectText: '📂 Muat Proyek',
+        btnExportPointsCsvText: '⬇ Export Titik (CSV)',
+
+        secBasemapTitle: 'Basemap',
+        secBasemapDesc: 'Pilih OSM, citra ESRI, atau tiles offline (XYZ).',
+        labelBasemapType: 'Tipe Basemap',
+        labelOfflineUrl: 'URL Tiles Offline',
+        basemapOsm: 'OpenStreetMap (Jalan)',
+        basemapSat: 'Citra Satelit (ESRI)',
+        basemapOffline: 'Offline Tiles (XYZ)',
+        chipOfflineHint: '📁 Letakkan folder <b>tiles/</b> di sebelah index.html. Contoh: tiles/{z}/{x}/{y}.png',
+
+        secUtmTitle: 'Tambah Titik via Koordinat UTM',
+        secUtmDesc: 'Masukkan zona, belahan, Easting, Northing, nama &amp; catatan.',
+        labelUtmName: 'Nama Titik',
+        labelUtmZone: 'Zona UTM',
+        labelUtmHemisphere: 'Belahan',
+        labelUtmEasting: 'Easting (m)',
+        labelUtmNorthing: 'Northing (m)',
+        labelUtmNote: 'Catatan Titik',
+        btnAddUtmText: '➕ Tambah Titik UTM',
+
+        secUploadTitle: 'Upload GPX, Shapefile &amp; GeoTIFF',
+        secUploadDesc: '<b>GPX</b>: track / waypoint.<br><b>Shapefile</b>: upload <b>.zip</b> berisi SHP, DBF, SHX, PRJ.<br><b>GeoTIFF</b>: raster .tif / .tiff (harus GeoTIFF).',
+        labelGpxFile: 'File GPX',
+        labelShpFile: 'File Shapefile (.zip)',
+        labelTiffFile: 'File GeoTIFF (.tif / .tiff)',
+        btnLoadGpxText: '📍 Tampilkan GPX',
+        btnLoadShpText: '🗺️ Tampilkan Shapefile',
+        btnLoadTiffText: '🛰️ Tampilkan GeoTIFF',
+        chipTiffHint: '⚠️ TIFF harus GeoTIFF. Untuk performa, buat versi web/resample lebih kecil dulu.',
+
+        secLayerTitle: 'Layer Data (GPX / SHP / GeoTIFF)',
+        secLayerDesc: 'Zoom, atur style (SHP), export GeoJSON, atau hapus layer.',
+        layerEmptyState: 'Belum ada layer. Upload GPX / Shapefile / GeoTIFF.',
+
+        secLabelTitle: 'Pengaturan Label Shapefile',
+        secLabelDesc: 'Pilih field atribut untuk label, dan atur label tampil / disembunyikan.<br>Tip: klik baris field di Attribute Table untuk menjadikannya label.',
+        labelLabelField: 'Field Label',
+        labelFieldAutoOption: '(Otomatis dari data)',
+        textToggleLabels: 'Tampilkan label di peta',
+
+        secAttrTitle: 'Attribute Feature Terpilih',
+        secAttrDesc: 'Klik polygon / garis / titik dari Shapefile untuk lihat atribut &amp; luas (jika polygon).<br>Klik salah satu baris field untuk menjadikannya label.',
+        attrEmptyState: 'Belum ada feature terpilih.',
+
+        secPointsTitle: 'Daftar Titik',
+        secPointsDesc: 'Titik dari klik peta &amp; input UTM tampil di sini. Bisa zoom, edit, hapus.',
+        emptyState: 'Belum ada titik. Klik peta atau input UTM.',
+
+        bottomChipText: '🖱️ Klik peta = titik • 📐 UTM • 📁 GPX / SHP / TIFF • 🔤 Label fleksibel • 🧮 Luas polygon • 🧭 Widget PRO • 📦 Offline tiles'
+      },
+      text: {
+        measureNormal: 'Mode: normal • Klik tombol di dock untuk mulai ukur.',
+        measureDistanceStart: 'Mode: ukur jarak • Klik beberapa titik pada peta.',
+        measureDistanceHint: 'Mode: jarak • Tambah titik lagi untuk melihat panjang.',
+        measureDistanceResult: (n, m, km) =>
+          `Mode: jarak • Titik: ${n} • Panjang: ${m.toFixed(1)} m (${km.toFixed(3)} km)`,
+        measureAreaStart: 'Mode: ukur luas • Klik beberapa titik (minimal 3).',
+        measureAreaHint: 'Mode: luas • Tambah titik (minimal 3) untuk dapat luas.',
+        measureAreaResult: (n, m2, ha) =>
+          `Mode: luas • Titik: ${n} • Luas: ${m2.toFixed(2)} m² (${ha.toFixed(4)} ha)`,
+
+        zoomNoLayers: 'Tidak ada layer untuk dizoom.',
+        utmInvalid: 'Zona, Easting, dan Northing harus diisi dengan benar.',
+        utmConvertFail: 'Konversi UTM gagal. Periksa lagi input koordinat.',
+        utmError: 'Terjadi kesalahan saat konversi UTM.',
+        gpxPickFirst: 'Pilih file GPX terlebih dahulu.',
+        gpxEmpty: 'GPX kosong atau tidak mengandung track/waypoint.',
+        shpPickFirst: 'Pilih file Shapefile .zip terlebih dahulu.',
+        shpFail: 'Gagal membaca Shapefile. Pastikan .zip berisi SHP, DBF, SHX, PRJ.',
+        tiffPickFirst: 'Pilih file GeoTIFF (.tif / .tiff) terlebih dahulu.',
+        tiffFail: 'Gagal membaca GeoTIFF. Pastikan file adalah GeoTIFF dan memiliki referensi koordinat.',
+        saveOk: 'Proyek tersimpan di browser (localStorage).',
+        loadNone: 'Belum ada proyek tersimpan.',
+        loadOk: 'Proyek berhasil dimuat. (Layer file tetap perlu di-upload ulang jika diperlukan.)',
+        loadFail: 'Gagal memuat proyek (data corrupt?).',
+        exportNoPoints: 'Tidak ada titik untuk diexport.',
+        gpsNotSupported: 'Perangkat tidak mendukung GPS.',
+        gpsError: msg => 'GPS error: ' + msg,
+        deletePointConfirm: name => `Hapus titik "${name}"?`,
+        deleteLayerConfirm: name => `Hapus layer "${name}"?`,
+        noGeoJSON: 'GeoJSON tidak tersedia untuk layer ini.',
+        noAttributes: 'Tidak ada atribut.'
+      }
+    },
+    en: {
+      ui: {
+        sidebarTitleMain: 'WebGIS UTM • GPX • SHP • GeoTIFF • Offline Tiles',
+        sidebarSubtitleMain: 'Click map / enter UTM / upload file',
+        toggleSidebarText: '🗺️ Fullscreen',
+
+        secProjectTitle: 'Project',
+        secProjectDesc: 'Save / load local project (points + settings). File layers must be re-uploaded.',
+        btnSaveProjectText: '💾 Save Project',
+        btnLoadProjectText: '📂 Load Project',
+        btnExportPointsCsvText: '⬇ Export Points (CSV)',
+
+        secBasemapTitle: 'Basemap',
+        secBasemapDesc: 'Choose OSM, ESRI imagery, or offline tiles (XYZ).',
+        labelBasemapType: 'Basemap type',
+        labelOfflineUrl: 'Offline tiles URL',
+        basemapOsm: 'OpenStreetMap (Roads)',
+        basemapSat: 'Satellite Imagery (ESRI)',
+        basemapOffline: 'Offline Tiles (XYZ)',
+        chipOfflineHint: '📁 Put folder <b>tiles/</b> next to index.html. Example: tiles/{z}/{x}/{y}.png',
+
+        secUtmTitle: 'Add Point via UTM Coordinates',
+        secUtmDesc: 'Fill zone, hemisphere, Easting, Northing, name &amp; note.',
+        labelUtmName: 'Point name',
+        labelUtmZone: 'UTM zone',
+        labelUtmHemisphere: 'Hemisphere',
+        labelUtmEasting: 'Easting (m)',
+        labelUtmNorthing: 'Northing (m)',
+        labelUtmNote: 'Point note',
+        btnAddUtmText: '➕ Add UTM Point',
+
+        secUploadTitle: 'Upload GPX, Shapefile &amp; GeoTIFF',
+        secUploadDesc: '<b>GPX</b>: track / waypoint.<br><b>Shapefile</b>: upload <b>.zip</b> containing SHP, DBF, SHX, PRJ.<br><b>GeoTIFF</b>: raster .tif / .tiff (must be GeoTIFF).',
+        labelGpxFile: 'GPX file',
+        labelShpFile: 'Shapefile (.zip)',
+        labelTiffFile: 'GeoTIFF file (.tif / .tiff)',
+        btnLoadGpxText: '📍 Show GPX',
+        btnLoadShpText: '🗺️ Show Shapefile',
+        btnLoadTiffText: '🛰️ Show GeoTIFF',
+        chipTiffHint: '⚠️ TIFF must be GeoTIFF. For performance, create lighter / resampled web version first.',
+
+        secLayerTitle: 'Data Layers (GPX / SHP / GeoTIFF)',
+        secLayerDesc: 'Zoom, style (SHP), export GeoJSON, or delete layer.',
+        layerEmptyState: 'No layer yet. Upload GPX / Shapefile / GeoTIFF.',
+
+        secLabelTitle: 'Shapefile Label Settings',
+        secLabelDesc: 'Choose attribute field for labels and toggle labels on/off.<br>Tip: click a field row in Attribute Table to use it as label.',
+        labelLabelField: 'Label field',
+        labelFieldAutoOption: '(Auto / from data)',
+        textToggleLabels: 'Show labels on map',
+
+        secAttrTitle: 'Selected Feature Attributes',
+        secAttrDesc: 'Click polygon / line / point from Shapefile to view attributes &amp; area (for polygons).<br>Click a field row to use it as label.',
+        attrEmptyState: 'No feature selected yet.',
+
+        secPointsTitle: 'Point List',
+        secPointsDesc: 'Points from map click &amp; UTM input show here. You can zoom, edit, delete.',
+        emptyState: 'No points yet. Click the map or enter UTM.',
+
+        bottomChipText: '🖱️ Click map = point • 📐 UTM • 📁 GPX / SHP / TIFF • 🔤 Flexible labels • 🧮 Polygon area • 🧭 PRO widget • 📦 Offline tiles'
+      },
+      text: {
+        measureNormal: 'Mode: normal • Click dock buttons to start measuring.',
+        measureDistanceStart: 'Mode: distance • Click several points on the map.',
+        measureDistanceHint: 'Mode: distance • Add more points to see length.',
+        measureDistanceResult: (n, m, km) =>
+          `Mode: distance • Vertices: ${n} • Length: ${m.toFixed(1)} m (${km.toFixed(3)} km)`,
+        measureAreaStart: 'Mode: area • Click several points (min 3).',
+        measureAreaHint: 'Mode: area • Add points (min 3) to get area.',
+        measureAreaResult: (n, m2, ha) =>
+          `Mode: area • Vertices: ${n} • Area: ${m2.toFixed(2)} m² (${ha.toFixed(4)} ha)`,
+
+        zoomNoLayers: 'No layers to zoom.',
+        utmInvalid: 'Zone, Easting and Northing must be filled correctly.',
+        utmConvertFail: 'UTM conversion failed. Please check your coordinates.',
+        utmError: 'Error while converting UTM.',
+        gpxPickFirst: 'Please choose a GPX file first.',
+        gpxEmpty: 'GPX is empty or has no track/waypoint.',
+        shpPickFirst: 'Please choose a Shapefile .zip first.',
+        shpFail: 'Failed reading Shapefile. Make sure .zip contains SHP, DBF, SHX, PRJ.',
+        tiffPickFirst: 'Please choose a GeoTIFF (.tif / .tiff) file first.',
+        tiffFail: 'Failed reading GeoTIFF. Make sure it is a GeoTIFF with spatial reference.',
+        saveOk: 'Project saved to browser (localStorage).',
+        loadNone: 'No saved project found.',
+        loadOk: 'Project loaded. (File layers still need to be re-uploaded if needed.)',
+        loadFail: 'Failed to load project (data corrupt?).',
+        exportNoPoints: 'No points to export.',
+        gpsNotSupported: 'Device does not support GPS.',
+        gpsError: msg => 'GPS error: ' + msg,
+        deletePointConfirm: name => `Delete point "${name}"?`,
+        deleteLayerConfirm: name => `Delete layer "${name}"?`,
+        noGeoJSON: 'GeoJSON is not available for this layer.',
+        noAttributes: 'No attributes.'
+      }
+    }
+  };
+
+  let langState = localStorage.getItem('webgis_lang') || 'id';
+  let themeState = localStorage.getItem('webgis_theme') || 'dark';
+
+  function t(key, ...args) {
+    const group = I18N[langState].text;
+    const val = group[key];
+    if (typeof val === 'function') return val(...args);
+    return val || key;
+  }
+
+  function applyLanguageToUI() {
+    const ui = I18N[langState].ui;
+    const set = (id, html) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    };
+
+    set('sidebarTitleMain', ui.sidebarTitleMain);
+    set('sidebarSubtitleMain', ui.sidebarSubtitleMain);
+    set('secProjectTitle', ui.secProjectTitle);
+    set('secProjectDesc', ui.secProjectDesc);
+    set('secBasemapTitle', ui.secBasemapTitle);
+    set('secBasemapDesc', ui.secBasemapDesc);
+    set('labelBasemapType', ui.labelBasemapType);
+    set('labelOfflineUrl', ui.labelOfflineUrl);
+    set('chipOfflineHint', ui.chipOfflineHint);
+    set('secUtmTitle', ui.secUtmTitle);
+    set('secUtmDesc', ui.secUtmDesc);
+    set('labelUtmName', ui.labelUtmName);
+    set('labelUtmZone', ui.labelUtmZone);
+    set('labelUtmHemisphere', ui.labelUtmHemisphere);
+    set('labelUtmEasting', ui.labelUtmEasting);
+    set('labelUtmNorthing', ui.labelUtmNorthing);
+    set('labelUtmNote', ui.labelUtmNote);
+    set('secUploadTitle', ui.secUploadTitle);
+    set('secUploadDesc', ui.secUploadDesc);
+    set('labelGpxFile', ui.labelGpxFile);
+    set('labelShpFile', ui.labelShpFile);
+    set('labelTiffFile', ui.labelTiffFile);
+    set('chipTiffHint', ui.chipTiffHint);
+    set('secLayerTitle', ui.secLayerTitle);
+    set('secLayerDesc', ui.secLayerDesc);
+    set('secLabelTitle', ui.secLabelTitle);
+    set('secLabelDesc', ui.secLabelDesc);
+    set('labelLabelField', ui.labelLabelField);
+    set('secAttrTitle', ui.secAttrTitle);
+    set('secAttrDesc', ui.secAttrDesc);
+    set('secPointsTitle', ui.secPointsTitle);
+    set('secPointsDesc', ui.secPointsDesc);
+    set('emptyState', ui.emptyState);
+    set('layerEmptyState', ui.layerEmptyState);
+    set('attrEmptyState', ui.attrEmptyState);
+
+    const bottomChip = document.getElementById('bottomChipText');
+    if (bottomChip) bottomChip.innerHTML = ui.bottomChipText;
+
+    document.getElementById('btnSaveProject').textContent = ui.btnSaveProjectText;
+    document.getElementById('btnLoadProject').textContent = ui.btnLoadProjectText;
+    document.getElementById('btnExportPointsCsv').textContent = ui.btnExportPointsCsvText;
+    document.getElementById('btnAddUtm').textContent = ui.btnAddUtmText;
+    document.getElementById('btnLoadGpx').textContent = ui.btnLoadGpxText;
+    document.getElementById('btnLoadShp').textContent = ui.btnLoadShpText;
+    document.getElementById('btnLoadTiff').textContent = ui.btnLoadTiffText;
+    document.getElementById('toggleSidebarBtn').textContent = ui.toggleSidebarText;
+
+    // teks opsi basemap
+    const basemapSelectEl = document.getElementById('basemapSelect');
+    if (basemapSelectEl && basemapSelectEl.options.length >= 3) {
+      basemapSelectEl.options[0].text = ui.basemapOsm;
+      basemapSelectEl.options[1].text = ui.basemapSat;
+      basemapSelectEl.options[2].text = ui.basemapOffline;
+    }
+
+    // placeholder input UTM supaya tidak ada "Misal" di bahasa Inggris
+    const utmNameInput = document.getElementById('utmName');
+    if (utmNameInput) {
+      utmNameInput.placeholder = (langState === 'id')
+        ? 'Misal: Plot 01 / KM 46'
+        : 'e.g. Plot 01 / KM 46';
+    }
+    const utmEastingInput = document.getElementById('utmEasting');
+    if (utmEastingInput) {
+      utmEastingInput.placeholder = (langState === 'id')
+        ? 'Misal: 450000'
+        : 'e.g. 450000';
+    }
+    const utmNorthingInput = document.getElementById('utmNorthing');
+    if (utmNorthingInput) {
+      utmNorthingInput.placeholder = (langState === 'id')
+        ? 'Misal: 9820000'
+        : 'e.g. 9820000';
+    }
+    const utmNoteInput = document.getElementById('utmNote');
+    if (utmNoteInput) {
+      utmNoteInput.placeholder = (langState === 'id')
+        ? 'Misal: KM 46, kondisi jalan rusak ringan'
+        : 'e.g. KM 46, road condition';
+    }
+  }
+
+  // ====== INISIALISASI PETA ======
+  const map = L.map('map', {
+    zoomControl: true
+
+  }).setView([-1.5, 117], 5); // Fokus Indonesia
+
+  map.zoomControl.setPosition('bottomright');
+
+  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  const satellite = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri'
+    }
+  );
+
+  let offlineTiles = null; // akan dibuat saat dipilih
+
+  const overlaysGroup = L.featureGroup().addTo(map);
+
+  // ====== VARIABEL GLOBAL ======
+  let points = [];
+  let pointCounter = 1;
+
+  let overlayLayers = [];
+  let overlayCounter = 1;
+
+  const pointListEl = document.getElementById('point-list');
+  const emptyStateEl = document.getElementById('emptyState');
+
+  const layerListEl = document.getElementById('layer-list');
+  const layerEmptyStateEl = document.getElementById('layerEmptyState');
+
+  const attrContainerEl = document.getElementById('attr-container');
+
+  const sidebarEl = document.getElementById('sidebar');
+  const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+
+  const utmNameEl = document.getElementById('utmName');
+  const utmZoneEl = document.getElementById('utmZone');
+  const utmHemisphereEl = document.getElementById('utmHemisphere');
+  const utmEastingEl = document.getElementById('utmEasting');
+  const utmNorthingEl = document.getElementById('utmNorthing');
+  const utmNoteEl = document.getElementById('utmNote');
+  const btnAddUtm = document.getElementById('btnAddUtm');
+
+  const basemapSelect = document.getElementById('basemapSelect');
+  const offlineTileUrlInput = document.getElementById('offlineTileUrl');
+
+  const gpxFileEl = document.getElementById('gpxFile');
+  const shpFileEl = document.getElementById('shpFile');
+  const tiffFileEl = document.getElementById('tiffFile');
+  const btnLoadGpx = document.getElementById('btnLoadGpx');
+  const btnLoadShp = document.getElementById('btnLoadShp');
+  const btnLoadTiff = document.getElementById('btnLoadTiff');
+
+  const labelFieldSelect = document.getElementById('labelFieldSelect');
+  const toggleLabelsEl = document.getElementById('toggleLabels');
+
+  const btnSaveProject = document.getElementById('btnSaveProject');
+  const btnLoadProject = document.getElementById('btnLoadProject');
+  const btnExportPointsCsv = document.getElementById('btnExportPointsCsv');
+
+  const btnResetIndonesia = document.getElementById('btnResetIndonesia');
+  const btnZoomAllLayers = document.getElementById('btnZoomAllLayers');
+  const btnMeasureDistance = document.getElementById('btnMeasureDistance');
+  const btnMeasureArea = document.getElementById('btnMeasureArea');
+  const btnClearMeasure = document.getElementById('btnClearMeasure');
+  const measureInfoEl = document.getElementById('measureInfo');
+  const btnToggleGPS = document.getElementById('btnToggleGPS');
+  const btnTheme = document.getElementById('btnTheme');
+  const btnLang = document.getElementById('btnLang');
+
+  let labelFieldOptions = new Set();
+  let labelFieldOverride = '';
+  let labelsVisible = true;
+
+  let measureMode = 'none';
+  let measureLatLngs = [];
+  let measureLayer = null;
+
+  // Modal titik
+  const pointModalBackdrop = document.getElementById('pointModalBackdrop');
+  const pointModalTitle = document.getElementById('pointModalTitle');
+  const pointModalNameLabel = document.getElementById('pointModalNameLabel');
+  const pointModalNoteLabel = document.getElementById('pointModalNoteLabel');
+  const pointModalNameInput = document.getElementById('pointModalName');
+  const pointModalNoteInput = document.getElementById('pointModalNote');
+  const pointModalCancel = document.getElementById('pointModalCancel');
+  const pointModalOk = document.getElementById('pointModalOk');
+  let pendingPointLatLng = null;
+
+  // ====== PROJ4 DEFINISI ======
+  proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');
+
+  function utmToLatLng(zone, easting, northing, hemisphere) {
+    const hemi = hemisphere === 'S' ? '+south' : '';
+    const utmProjStr =
+      `+proj=utm +zone=${zone} ${hemi} +datum=WGS84 +units=m +no_defs`;
+    const result = proj4(utmProjStr, 'EPSG:4326', [easting, northing]);
+    const lon = result[0];
+    const lat = result[1];
+    return { lat, lng: lon };
+  }
+
+  // ====== TITIK MANUAL & UTM ======
+  function addPoint(name, latlng, source = 'manual', note = '') {
+    const id = pointCounter++;
+    const marker = L.marker(latlng, { draggable: true }).addTo(map);
+    const noteHtml = note ? `<br><i>${note}</i>` : '';
+    const srcText = (langState === 'id' ? 'Sumber' : 'Source');
+    marker.bindPopup(
+      `<b>${name}</b><br>${srcText}: ${source}<br>Lat: ${latlng.lat.toFixed(5)}<br>Lng: ${latlng.lng.toFixed(5)}${noteHtml}`
+    );
+    const point = { id, name, lat: latlng.lat, lng: latlng.lng, note, marker };
+
+    marker.on('dragend', (e) => {
+      const pos = e.target.getLatLng();
+      point.lat = pos.lat;
+      point.lng = pos.lng;
+      const noteHtml2 = point.note ? `<br><i>${point.note}</i>` : '';
+      marker.setPopupContent(
+        `<b>${point.name}</b><br>Lat: ${pos.lat.toFixed(5)}<br>Lng: ${pos.lng.toFixed(5)}${noteHtml2}`
+      );
+      renderPointList();
+    });
+
+    points.push(point);
+    renderPointList();
+  }
+
+  function renderPointList() {
+    pointListEl.innerHTML = '';
+    if (points.length === 0) {
+      emptyStateEl.style.display = 'block';
+      emptyStateEl.textContent = I18N[langState].ui.emptyState;
+      return;
+    }
+    emptyStateEl.style.display = 'none';
+
+    const labelId = 'ID';
+    const labelNotePrefix = '📝 ';
+    const btnZoomText = '🔍 Zoom';
+    const btnEditText = '✏️ Edit';
+    const btnEditNoteText = (langState === 'id' ? '📝 Catatan' : '📝 Note');
+    const btnDeleteText = (langState === 'id' ? '🗑 Hapus' : '🗑 Delete');
+
+    points.forEach((p) => {
+      const li = document.createElement('li');
+      li.className = 'point-item';
+      li.innerHTML = `
+        <div class="item-header">
+          <div>
+            <div class="item-title" title="${p.name}">${p.name}</div>
+            <div class="item-sub">${labelId}: ${p.id}</div>
+          </div>
+        </div>
+        <div class="coords">
+          Lat: ${p.lat.toFixed(5)} • Lng: ${p.lng.toFixed(5)}
+        </div>
+        ${p.note ? `<div class="note-text">${labelNotePrefix}${p.note}</div>` : ''}
+        <div class="item-actions">
+          <button class="btn btn-sm btn-outline" data-action="zoom" data-id="${p.id}">${btnZoomText}</button>
+          <button class="btn btn-sm btn-outline" data-action="edit" data-id="${p.id}">${btnEditText}</button>
+          <button class="btn btn-sm btn-outline" data-action="edit-note" data-id="${p.id}">${btnEditNoteText}</button>
+          <button class="btn btn-sm btn-danger" data-action="delete" data-id="${p.id}">${btnDeleteText}</button>
+        </div>
+      `;
+      pointListEl.appendChild(li);
+    });
+  }
+
+  pointListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id = parseInt(btn.dataset.id, 10);
+    const point = points.find(p => p.id === id);
+    if (!point) return;
+
+    if (action === 'zoom') {
+      map.setView([point.lat, point.lng], 16);
+      point.marker.openPopup();
+    }
+    if (action === 'edit') {
+      const msg = langState === 'id'
+        ? 'Ubah nama titik:'
+        : 'Edit point name:';
+      const newName = prompt(msg, point.name);
+      if (!newName) return;
+      point.name = newName;
+      const noteHtml = point.note ? `<br><i>${point.note}</i>` : '';
+      point.marker.setPopupContent(
+        `<b>${point.name}</b><br>Lat: ${point.lat.toFixed(5)}<br>Lng: ${point.lng.toFixed(5)}${noteHtml}`
+      );
+      renderPointList();
+    }
+    if (action === 'edit-note') {
+      const msg = langState === 'id'
+        ? 'Ubah catatan titik:'
+        : 'Edit point note:';
+      const newNote = prompt(msg, point.note || '');
+      if (newNote === null) return;
+      point.note = newNote.trim();
+      const noteHtml = point.note ? `<br><i>${point.note}</i>` : '';
+      point.marker.setPopupContent(
+        `<b>${point.name}</b><br>Lat: ${point.lat.toFixed(5)}<br>Lng: ${point.lng.toFixed(5)}${noteHtml}`
+      );
+      renderPointList();
+    }
+    if (action === 'delete') {
+      if (!confirm(t('deletePointConfirm', point.name))) return;
+      map.removeLayer(point.marker);
+      points = points.filter(p => p.id !== id);
+      renderPointList();
+    }
+  });
+
+  // ===== MODAL TITIK =====
+  function applyPointModalLanguage() {
+    if (!pointModalBackdrop) return;
+    if (langState === 'id') {
+      pointModalTitle.textContent = 'Tambah Titik';
+      pointModalNameLabel.textContent = 'Nama titik';
+      pointModalNoteLabel.textContent = 'Catatan titik';
+      pointModalNameInput.placeholder = 'Misal: Plot 01 / KM 46';
+      pointModalNoteInput.placeholder = 'Misal: Keterangan lokasi';
+      pointModalCancel.textContent = 'Batal';
+      pointModalOk.textContent = 'Simpan';
+    } else {
+      pointModalTitle.textContent = 'Add Point';
+      pointModalNameLabel.textContent = 'Point name';
+      pointModalNoteLabel.textContent = 'Point note';
+      pointModalNameInput.placeholder = 'e.g. Plot 01 / KM 46';
+      pointModalNoteInput.placeholder = 'e.g. Site description';
+      pointModalCancel.textContent = 'Cancel';
+      pointModalOk.textContent = 'Save';
+    }
+  }
+
+  function openPointModal(latlng) {
+    pendingPointLatLng = latlng;
+    pointModalNameInput.value = '';
+    pointModalNoteInput.value = '';
+    applyPointModalLanguage();
+    pointModalBackdrop.classList.remove('hidden');
+    setTimeout(() => pointModalNameInput.focus(), 10);
+  }
+
+  function closePointModal() {
+    pointModalBackdrop.classList.add('hidden');
+    pendingPointLatLng = null;
+  }
+
+  pointModalCancel.addEventListener('click', closePointModal);
+  pointModalBackdrop.addEventListener('click', (e) => {
+    if (e.target === pointModalBackdrop) closePointModal();
+  });
+
+  pointModalOk.addEventListener('click', () => {
+    if (!pendingPointLatLng) {
+      closePointModal();
+      return;
+    }
+    const defaultName = (langState === 'id' ? 'Titik' : 'Point');
+    const name = pointModalNameInput.value.trim() || `${defaultName} ${pointCounter}`;
+    const note = pointModalNoteInput.value.trim();
+    addPoint(name, pendingPointLatLng, 'Map Click', note);
+    map.setView(pendingPointLatLng, Math.max(map.getZoom(), 16));
+    closePointModal();
+  });
+
+  pointModalNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      pointModalOk.click();
+    }
+  });
+
+  // klik peta → buka modal, kecuali mode measure
+  map.on('click', (e) => {
+    if (measureMode !== 'none') {
+      handleMeasureClick(e.latlng);
+      return;
+    }
+    openPointModal(e.latlng);
+  });
+
+  btnAddUtm.addEventListener('click', () => {
+    const defaultName = langState === 'id' ? 'Titik UTM' : 'UTM Point';
+    const name = utmNameEl.value.trim() || `${defaultName} ${pointCounter}`;
+    const zone = parseInt(utmZoneEl.value, 10);
+    const hemi = utmHemisphereEl.value;
+    const easting = parseFloat(utmEastingEl.value);
+    const northing = parseFloat(utmNorthingEl.value);
+    const note = utmNoteEl.value.trim();
+
+    if (!zone || isNaN(zone) || !easting || !northing) {
+      alert(t('utmInvalid'));
+      return;
+    }
+
+    try {
+      const latlng = utmToLatLng(zone, easting, northing, hemi);
+      if (!isFinite(latlng.lat) || !isFinite(latlng.lng)) {
+        alert(t('utmConvertFail'));
+        return;
+      }
+      addPoint(name, latlng, 'UTM', note);
+      map.setView([latlng.lat, latlng.lng], 16);
+    } catch (err) {
+      console.error(err);
+      alert(t('utmError'));
+    }
+  });
+
+  // ====== LAYER LIST ======
+  function addOverlayLayer(name, type, layer, bounds, extra = {}) {
+    const id = overlayCounter++;
+    const info = {
+      id,
+      name,
+      type,
+      layer,
+      color: extra.color || '#22c55e',
+      weight: extra.weight || 2,
+      geojson: extra.geojson || null
+    };
+    overlayLayers.push(info);
+    overlaysGroup.addLayer(layer);
+    renderLayerList();
+    if (bounds) map.fitBounds(bounds);
+  }
+
+  function renderLayerList() {
+    layerListEl.innerHTML = '';
+    if (overlayLayers.length === 0) {
+      layerEmptyStateEl.style.display = 'block';
+      layerEmptyStateEl.textContent = I18N[langState].ui.layerEmptyState;
+      return;
+    }
+    layerEmptyStateEl.style.display = 'none';
+
+    const btnZoomText = '🔍 Zoom';
+    const btnExportText = '⬇ GeoJSON';
+    const btnDeleteText = (langState === 'id' ? '🗑 Hapus' : '🗑 Delete');
+    const typeLabel = (type) => type;
+
+    overlayLayers.forEach(l => {
+      const li = document.createElement('li');
+      li.className = 'layer-item';
+      li.innerHTML = `
+        <div class="item-header">
+          <div>
+            <div class="item-title" title="${l.name}">${l.name}</div>
+            <div class="item-sub">${typeLabel(l.type)} • ID: ${l.id}</div>
+          </div>
+        </div>
+        ${
+          l.type === 'Shapefile'
+            ? `<div class="layer-style-row">
+                 <span>${langState === 'id' ? 'Warna' : 'Color'}:</span>
+                 <input type="color" value="${l.color}" data-layer-style="color" data-id="${l.id}" />
+                 <span>${langState === 'id' ? 'Garis' : 'Stroke'}:</span>
+                 <input type="range" min="1" max="6" value="${l.weight}" data-layer-style="weight" data-id="${l.id}" />
+               </div>`
+            : ''
+        }
+        <div class="item-actions">
+          <button class="btn btn-sm btn-outline" data-layer-action="zoom" data-id="${l.id}">${btnZoomText}</button>
+          ${
+            l.type === 'Shapefile' && l.geojson
+              ? `<button class="btn btn-sm btn-outline" data-layer-action="export-geojson" data-id="${l.id}">${btnExportText}</button>`
+              : ''
+          }
+          <button class="btn btn-sm btn-danger" data-layer-action="delete" data-id="${l.id}">${btnDeleteText}</button>
+        </div>
+      `;
+      layerListEl.appendChild(li);
+    });
+  }
+
+  layerListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-layer-action]');
+    if (btn) {
+      const action = btn.dataset.layerAction;
+      const id = parseInt(btn.dataset.id, 10);
+      const layerInfo = overlayLayers.find(l => l.id === id);
+      if (!layerInfo) return;
+
+      if (action === 'zoom') {
+        try {
+          const b = layerInfo.layer.getBounds();
+          if (b && b.isValid()) map.fitBounds(b);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      if (action === 'delete') {
+        if (!confirm(t('deleteLayerConfirm', layerInfo.name))) return;
+        map.removeLayer(layerInfo.layer);
+        overlayLayers = overlayLayers.filter(l => l.id !== id);
+        renderLayerList();
+        refreshAllShapefileLabels();
+      }
+
+      if (action === 'export-geojson') {
+        if (!layerInfo.geojson) {
+          alert(t('noGeoJSON'));
+          return;
+        }
+        const blob = new Blob([JSON.stringify(layerInfo.geojson)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = layerInfo.name.replace(/\.[^/.]+$/, '') + '.geojson';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    const input = e.target.closest('input[data-layer-style]');
+    if (input) {
+      const id = parseInt(input.dataset.id, 10);
+      const styleType = input.dataset.layerStyle;
+      const layerInfo = overlayLayers.find(l => l.id === id);
+      if (!layerInfo) return;
+
+      if (styleType === 'color') {
+        layerInfo.color = input.value;
+      }
+      if (styleType === 'weight') {
+        layerInfo.weight = parseInt(input.value, 10);
+      }
+
+      if (layerInfo.type === 'Shapefile') {
+        layerInfo.layer.setStyle({
+          color: layerInfo.color,
+          weight: layerInfo.weight,
+          fillColor: layerInfo.color
+        });
+      }
+    }
+  });
+
+  // ====== ATTRIBUTE TABLE ======
+  function clearAttributes() {
+    attrContainerEl.innerHTML = '';
+    const msg = document.createElement('div');
+    msg.className = 'empty-state';
+    msg.textContent = I18N[langState].ui.attrEmptyState;
+    attrContainerEl.appendChild(msg);
+  }
+
+  function showFeatureAttributes(feature) {
+    const props = feature.properties || {};
+    const geomType = feature.geometry ? feature.geometry.type : 'Unknown';
+
+    attrContainerEl.innerHTML = '';
+
+    const title = document.createElement('div');
+    title.className = 'item-sub';
+    title.textContent = `Geometry: ${geomType}`;
+    attrContainerEl.appendChild(title);
+
+    let areaInfo = null;
+    if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
+      try {
+        const areaM2 = turf.area(feature);
+        const areaHa = areaM2 / 10000.0;
+        areaInfo = { m2: areaM2, ha: areaHa };
+      } catch (err) {
+        console.error('Error hitung luas:', err);
+      }
+    }
+
+    if (areaInfo) {
+      const areaDiv = document.createElement('div');
+      areaDiv.className = 'coords';
+      const labelArea = langState === 'id' ? 'Luas' : 'Area';
+      areaDiv.innerHTML =
+        `${labelArea}: <b>${areaInfo.m2.toFixed(2)}</b> m² • <b>${areaInfo.ha.toFixed(4)}</b> ha`;
+      attrContainerEl.appendChild(areaDiv);
+    }
+
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const thField = 'Field';
+    const thValue = 'Value';
+    thead.innerHTML = `<tr><th>${thField}</th><th>${thValue}</th></tr>`;
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    const keys = Object.keys(props);
+
+    if (keys.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="2"><i>${t('noAttributes')}</i></td>`;
+      tbody.appendChild(tr);
+    } else {
+      keys.forEach(k => {
+        const v = props[k];
+        const tr = document.createElement('tr');
+        tr.dataset.fieldName = k;
+        tr.innerHTML = `<td>${k}</td><td>${v}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    table.appendChild(tbody);
+    attrContainerEl.appendChild(table);
+
+    table.addEventListener('click', (e) => {
+      const tr = e.target.closest('tr[data-field-name]');
+      if (!tr) return;
+      const fieldName = tr.dataset.fieldName;
+      if (!fieldName) return;
+      labelFieldOverride = fieldName;
+      const opts = Array.from(labelFieldSelect.options).map(o => o.value);
+      if (opts.includes(fieldName)) {
+        labelFieldSelect.value = fieldName;
+      }
+      refreshAllShapefileLabels();
+    });
+  }
+
+  // ====== LABEL FIELD ======
+  function getLabelField(props) {
+    if (!props) return null;
+    const keys = Object.keys(props);
+    if (keys.length === 0) return null;
+
+    const candidates = [
+      'KM_Kecil', 'Km_Kecil', 'km_kecil',
+      'KM', 'Km', 'km',
+      'KM_khusus', 'KM_khusus_', 'KM_Khusus',
+      'nama', 'NAMOBJ', 'NAME', 'Name',
+      'label', 'Label',
+      'NAMA',
+      'ID', 'id'
+    ];
+
+    for (const c of candidates) {
+      if (c in props) return c;
+    }
+    return keys[0];
+  }
+
+  function updateLabelFieldOptionsFromGeoJSON(geojson) {
+    if (!geojson || !geojson.features || !geojson.features.length) return;
+    geojson.features.forEach(f => {
+      const props = f.properties || {};
+      Object.keys(props).forEach(k => labelFieldOptions.add(k));
+    });
+    renderLabelFieldSelect();
+  }
+
+  function renderLabelFieldSelect() {
+    const current = labelFieldSelect.value;
+    labelFieldSelect.innerHTML = '';
+    const optAuto = document.createElement('option');
+    optAuto.value = '';
+    optAuto.textContent = I18N[langState].ui.labelFieldAutoOption;
+    labelFieldSelect.appendChild(optAuto);
+
+    Array.from(labelFieldOptions).sort().forEach(fieldName => {
+      const opt = document.createElement('option');
+      opt.value = fieldName;
+      opt.textContent = fieldName;
+      labelFieldSelect.appendChild(opt);
+    });
+
+    if (current && Array.from(labelFieldSelect.options).some(o => o.value === current)) {
+      labelFieldSelect.value = current;
+    } else {
+      labelFieldSelect.value = '';
+    }
+  }
+
+  labelFieldSelect.addEventListener('change', () => {
+    labelFieldOverride = labelFieldSelect.value || '';
+    refreshAllShapefileLabels();
+  });
+
+  toggleLabelsEl.addEventListener('change', () => {
+    labelsVisible = toggleLabelsEl.checked;
+    refreshAllShapefileLabels();
+  });
+
+  function refreshAllShapefileLabels() {
+    overlayLayers.forEach(l => {
+      if (l.type !== 'Shapefile') return;
+      l.layer.eachLayer(inner => {
+        const feature = inner.feature;
+        if (!feature) return;
+        const props = feature.properties || {};
+        const geomType = feature.geometry ? feature.geometry.type : null;
+
+        inner.unbindTooltip();
+        if (!labelsVisible) return;
+
+        const fieldName = labelFieldOverride || getLabelField(props);
+        const labelValue = fieldName ? props[fieldName] : null;
+        if (labelValue === null || labelValue === undefined || labelValue === '') return;
+
+        const isPolygon =
+          geomType === 'Polygon' || geomType === 'MultiPolygon';
+        const isPoint =
+          geomType === 'Point' || geomType === 'MultiPoint';
+
+        inner.bindTooltip(String(labelValue), {
+          permanent: true,
+          direction: isPolygon ? 'center' : 'top',
+          offset: isPoint ? [0, -12] : [0, 0],
+          className: 'feature-label'
+        });
+      });
+    });
+  }
+
+  // ====== BASEMAP (ONLINE / OFFLINE) ======
+  basemapSelect.addEventListener('change', () => {
+    const value = basemapSelect.value;
+
+    [osm, satellite, offlineTiles].forEach(layer => {
+      if (layer && map.hasLayer(layer)) map.removeLayer(layer);
+    });
+
+    if (value === 'osm') {
+      osm.addTo(map);
+    } else if (value === 'satellite') {
+      satellite.addTo(map);
+    } else if (value === 'offline') {
+      const url = offlineTileUrlInput.value.trim() || 'tiles/{z}/{x}/{y}.png';
+      offlineTiles = L.tileLayer(url, {
+        minZoom: 0,
+        maxZoom: 22,
+        attribution: 'Offline tiles'
+      });
+      offlineTiles.addTo(map);
+    }
+  });
+
+  // ====== LOAD GPX ======
+  btnLoadGpx.addEventListener('click', () => {
+    const file = gpxFileEl.files[0];
+    if (!file) {
+      alert(t('gpxPickFirst'));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const gpxText = e.target.result;
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(gpxText, "application/xml");
+
+      const fileGroup = L.featureGroup();
+      let bounds = null;
+
+      const segments = xml.getElementsByTagName("trkseg");
+      for (let s = 0; s < segments.length; s++) {
+        const seg = segments[s];
+        const trkpts = seg.getElementsByTagName("trkpt");
+        const segCoords = [];
+        for (let i = 0; i < trkpts.length; i++) {
+          const lat = parseFloat(trkpts[i].getAttribute("lat"));
+          const lon = parseFloat(trkpts[i].getAttribute("lon"));
+          if (isNaN(lat) || isNaN(lon)) continue;
+          segCoords.push([lat, lon]);
+        }
+        if (segCoords.length > 1) {
+          const line = L.polyline(segCoords, {
+            color: "#00b7ff",
+            weight: 3
+          }).addTo(fileGroup);
+          const lb = line.getBounds();
+          if (!bounds) bounds = lb;
+          else bounds.extend(lb);
+        }
+      }
+
+      const wpts = xml.getElementsByTagName("wpt");
+      for (let i = 0; i < wpts.length; i++) {
+        const lat = parseFloat(wpts[i].getAttribute("lat"));
+        const lon = parseFloat(wpts[i].getAttribute("lon"));
+        if (isNaN(lat) || isNaN(lon)) continue;
+
+        const nameNode = wpts[i].getElementsByTagName("name")[0];
+        const name = nameNode ? nameNode.textContent : `Waypoint ${i + 1}`;
+
+        const m = L.marker([lat, lon]).addTo(fileGroup);
+        m.bindPopup(`<b>${name}</b><br>Lat: ${lat.toFixed(5)}<br>Lng: ${lon.toFixed(5)}`);
+
+        if (!bounds) bounds = L.latLngBounds([lat, lon], [lat, lon]);
+        else bounds.extend([lat, lon]);
+      }
+
+      if (!bounds) {
+        alert(t('gpxEmpty'));
+        return;
+      }
+
+      addOverlayLayer(file.name, "GPX", fileGroup, bounds);
+    };
+    reader.readAsText(file);
+  });
+
+  // ====== LOAD SHAPEFILE ======
+  btnLoadShp.addEventListener('click', () => {
+    const file = shpFileEl.files[0];
+    if (!file) {
+      alert(t('shpPickFirst'));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const arrayBuffer = e.target.result;
+      shp(arrayBuffer).then(function (geojson) {
+        clearAttributes();
+        updateLabelFieldOptionsFromGeoJSON(geojson);
+
+        const layer = L.geoJSON(geojson, {
+          style: function (feat) {
             return {
-                pane: 'pane_PUSKESMAS_PT_50K_5',
-                radius: 4.0,
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(243,166,178,1.0)',
-                interactive: true,
-            }
-        }
-        map.createPane('pane_PUSKESMAS_PT_50K_5');
-        map.getPane('pane_PUSKESMAS_PT_50K_5').style.zIndex = 405;
-        map.getPane('pane_PUSKESMAS_PT_50K_5').style['mix-blend-mode'] = 'normal';
-        var layer_PUSKESMAS_PT_50K_5 = new L.geoJson(json_PUSKESMAS_PT_50K_5, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_PUSKESMAS_PT_50K_5',
-            layerName: 'layer_PUSKESMAS_PT_50K_5',
-            pane: 'pane_PUSKESMAS_PT_50K_5',
-            onEachFeature: pop_PUSKESMAS_PT_50K_5,
-            pointToLayer: function (feature, latlng) {
-                var context = {
-                    feature: feature,
-                    variables: {}
-                };
-                return L.circleMarker(latlng, style_PUSKESMAS_PT_50K_5_0(feature));
-            },
-        });
-        bounds_group.addLayer(layer_PUSKESMAS_PT_50K_5);
-        map.addLayer(layer_PUSKESMAS_PT_50K_5);
-        function pop_ADMINISTRASI_LN_50K_6(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    for (var i in e.target._eventParents) {
-                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
-                            e.target._eventParents[i].resetStyle(e.target);
-                        }
-                    }
-                },
-                mouseover: highlightFeature,
+              color: '#22c55e',
+              weight: 2,
+              fillColor: '#22c55e',
+              fillOpacity: feat.geometry &&
+                           (feat.geometry.type === 'Polygon' || feat.geometry.type === 'MultiPolygon')
+                           ? 0.25 : 0.0
+            };
+          },
+          pointToLayer: function(feature, latlng) {
+            return L.circleMarker(latlng, {
+              radius: 5,
+              color: '#22c55e',
+              weight: 2,
+              fillColor: '#22c55e',
+              fillOpacity: 0.9
             });
-            var popupContent = '<table>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['KARKTR'] !== null ? autolinker.link(String(feature.properties['KARKTR']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['STSBTS'] !== null ? autolinker.link(String(feature.properties['STSBTS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['FCODE'] !== null ? autolinker.link(String(feature.properties['FCODE']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['KELAS'] !== null ? autolinker.link(String(feature.properties['KELAS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['UUPP'] !== null ? autolinker.link(String(feature.properties['UUPP']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['LOKASI'] !== null ? autolinker.link(String(feature.properties['LOKASI']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['REMARK'] !== null ? autolinker.link(String(feature.properties['REMARK']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['NAMOBJ'] !== null ? autolinker.link(String(feature.properties['NAMOBJ']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['ADMIN1'] !== null ? autolinker.link(String(feature.properties['ADMIN1']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['ADMIN2'] !== null ? autolinker.link(String(feature.properties['ADMIN2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['SRS_ID'] !== null ? autolinker.link(String(feature.properties['SRS_ID']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['LCODE'] !== null ? autolinker.link(String(feature.properties['LCODE']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['METADATA'] !== null ? autolinker.link(String(feature.properties['METADATA']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['WAKLD1'] !== null ? autolinker.link(String(feature.properties['WAKLD1']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['WAKLD2'] !== null ? autolinker.link(String(feature.properties['WAKLD2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['WADKC1'] !== null ? autolinker.link(String(feature.properties['WADKC1']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['WADKC2'] !== null ? autolinker.link(String(feature.properties['WADKC2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['WAKBK1'] !== null ? autolinker.link(String(feature.properties['WAKBK1']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['WAKBK2'] !== null ? autolinker.link(String(feature.properties['WAKBK2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['WAPRO1'] !== null ? autolinker.link(String(feature.properties['WAPRO1']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['WAPRO2'] !== null ? autolinker.link(String(feature.properties['WAPRO2']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['TIPTBT'] !== null ? autolinker.link(String(feature.properties['TIPTBT']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['PJGBTS'] !== null ? autolinker.link(String(feature.properties['PJGBTS']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['KLBADM'] !== null ? autolinker.link(String(feature.properties['KLBADM']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['TIPLOK'] !== null ? autolinker.link(String(feature.properties['TIPLOK']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['SHAPE_Leng'] !== null ? autolinker.link(String(feature.properties['SHAPE_Leng']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                </table>';
-            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
-			layer.on('popupopen', function(e) {
-				addClassToPopupIfMedia(content, e.popup);
-			});
-			layer.bindPopup(content, { maxHeight: 400 });
+          },
+          onEachFeature: function (feature, layer) {
+            const props = feature.properties || {};
+            let popupHtml = '';
+            const labelFieldDefault = getLabelField(props);
+            const labelValueDefault = labelFieldDefault ? props[labelFieldDefault] : null;
+            if (labelValueDefault !== null && labelValueDefault !== undefined) {
+              popupHtml += `<b>${labelValueDefault}</b><br>`;
+            }
+            const keys = Object.keys(props);
+            keys.slice(0, 5).forEach(k => {
+              popupHtml += `${k}: ${props[k]}<br>`;
+            });
+            if (popupHtml === '') popupHtml = `<i>${t('noAttributes')}</i>`;
+            layer.bindPopup(popupHtml);
+            layer.on('click', function () {
+              showFeatureAttributes(feature);
+            });
+          }
+        });
+
+        const bounds = layer.getBounds();
+        addOverlayLayer(file.name, "Shapefile", layer, bounds, {
+          color: '#22c55e',
+          weight: 2,
+          geojson
+        });
+
+        refreshAllShapefileLabels();
+      }).catch(function (err) {
+        console.error(err);
+        alert(t('shpFail'));
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  // ====== LOAD TIFF / GEOTIFF ======
+  btnLoadTiff.addEventListener('click', () => {
+    const file = tiffFileEl.files[0];
+    if (!file) {
+      alert(t('tiffPickFirst'));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const arrayBuffer = e.target.result;
+      parseGeoraster(arrayBuffer).then(georaster => {
+        const layer = new GeoRasterLayer({
+          georaster: georaster,
+          opacity: 0.7,
+          resolution: 64
+        });
+
+        const bounds = layer.getBounds();
+        addOverlayLayer(file.name, "GeoTIFF", layer, bounds, {
+          color: '#f97316',
+          weight: 1
+        });
+      }).catch(err => {
+        console.error(err);
+        alert(t('tiffFail'));
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  // ====== TOGGLE SIDEBAR ======
+  toggleSidebarBtn.addEventListener('click', () => {
+    sidebarEl.classList.toggle('hidden');
+    setTimeout(() => map.invalidateSize(), 300);
+  });
+
+  // ====== MEASURE TOOLS ======
+  function updateMeasureInfoTextDistance(hasResult, distM, distKm) {
+    if (!hasResult) {
+      measureInfoEl.textContent = t('measureDistanceHint');
+    } else {
+      measureInfoEl.textContent = t('measureDistanceResult', measureLatLngs.length, distM, distKm);
+    }
+  }
+
+  function updateMeasureInfoTextArea(hasResult, areaM2, areaHa) {
+    if (!hasResult) {
+      measureInfoEl.textContent = t('measureAreaHint');
+    } else {
+      measureInfoEl.textContent = t('measureAreaResult', measureLatLngs.length, areaM2, areaHa);
+    }
+  }
+
+  function setMeasureMode(mode) {
+    measureMode = mode;
+    measureLatLngs = [];
+    if (measureLayer) {
+      map.removeLayer(measureLayer);
+      measureLayer = null;
+    }
+    if (mode === 'none') {
+      measureInfoEl.textContent = t('measureNormal');
+    } else if (mode === 'distance') {
+      measureInfoEl.textContent = t('measureDistanceStart');
+    } else if (mode === 'area') {
+      measureInfoEl.textContent = t('measureAreaStart');
+    }
+  }
+
+  function handleMeasureClick(latlng) {
+    measureLatLngs.push([latlng.lng, latlng.lat]);
+
+    if (measureMode === 'distance') {
+      if (measureLayer) map.removeLayer(measureLayer);
+      const coordsLatLng = measureLatLngs.map(c => [c[1], c[0]]);
+      measureLayer = L.polyline(coordsLatLng, { color: '#fb923c', weight: 3 }).addTo(map);
+
+      if (measureLatLngs.length > 1) {
+        const line = turf.lineString(measureLatLngs);
+        const distKm = turf.length(line, { units: 'kilometers' });
+        const distM = distKm * 1000;
+        updateMeasureInfoTextDistance(true, distM, distKm);
+      } else {
+        updateMeasureInfoTextDistance(false);
+      }
+    }
+
+    if (measureMode === 'area') {
+      if (measureLayer) map.removeLayer(measureLayer);
+      const coordsLatLng = measureLatLngs.map(c => [c[1], c[0]]);
+      measureLayer = L.polygon(coordsLatLng, {
+        color: '#fb923c',
+        weight: 2,
+        fillColor: '#f97316',
+        fillOpacity: 0.25
+      }).addTo(map);
+
+      if (measureLatLngs.length > 2) {
+        const polyCoords = [...measureLatLngs, measureLatLngs[0]];
+        const poly = turf.polygon([polyCoords]);
+        const areaM2 = turf.area(poly);
+        const areaHa = areaM2 / 10000.0;
+        updateMeasureInfoTextArea(true, areaM2, areaHa);
+      } else {
+        updateMeasureInfoTextArea(false);
+      }
+    }
+  }
+
+  btnMeasureDistance.addEventListener('click', () => {
+    setMeasureMode('distance');
+  });
+
+  btnMeasureArea.addEventListener('click', () => {
+    setMeasureMode('area');
+  });
+
+  btnClearMeasure.addEventListener('click', () => {
+    setMeasureMode('none');
+  });
+
+  // ====== RESET INDONESIA & ZOOM ALL ======
+  btnResetIndonesia.addEventListener('click', () => {
+    map.setView([-1.5, 117], 5);
+  });
+
+  btnZoomAllLayers.addEventListener('click', () => {
+    try {
+      const group = L.featureGroup();
+
+      points.forEach(p => {
+        group.addLayer(L.marker([p.lat, p.lng]));
+      });
+
+      overlayLayers.forEach(l => {
+        try {
+          if (l.layer) group.addLayer(l.layer);
+        } catch(e){}
+      });
+
+      if (group.getLayers().length === 0) {
+        alert(t('zoomNoLayers'));
+        return;
+      }
+
+      const b = group.getBounds();
+      map.fitBounds(b.pad(0.1));
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  // ====== SIMPAN / MUAT PROYEK ======
+  const PROJECT_KEY = 'webgis_project_v1';
+
+  function saveProject() {
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+
+    const project = {
+      basemap: basemapSelect.value,
+      view: {
+        lat: center.lat,
+        lng: center.lng,
+        zoom
+      },
+      points: points.map(p => ({
+        id: p.id,
+        name: p.name,
+        lat: p.lat,
+        lng: p.lng,
+        note: p.note
+      })),
+      labelFieldOverride,
+      labelsVisible
+    };
+
+    localStorage.setItem(PROJECT_KEY, JSON.stringify(project));
+    alert(t('saveOk'));
+  }
+
+  function loadProject() {
+    const raw = localStorage.getItem(PROJECT_KEY);
+    if (!raw) {
+      alert(t('loadNone'));
+      return;
+    }
+
+    try {
+      const project = JSON.parse(raw);
+
+      basemapSelect.value = project.basemap || 'osm';
+      basemapSelect.dispatchEvent(new Event('change'));
+
+      if (project.view) {
+        map.setView([project.view.lat, project.view.lng], project.view.zoom);
+      }
+
+      points.forEach(p => map.removeLayer(p.marker));
+      points = [];
+      pointCounter = 1;
+
+      (project.points || []).forEach(p => {
+        const latlng = { lat: p.lat, lng: p.lng };
+        addPoint(p.name, latlng, 'Project', p.note || '');
+      });
+
+      labelFieldOverride = project.labelFieldOverride || '';
+      labelsVisible = project.labelsVisible !== false;
+      toggleLabelsEl.checked = labelsVisible;
+      if (labelFieldOverride &&
+          Array.from(labelFieldSelect.options).some(o => o.value === labelFieldOverride)) {
+        labelFieldSelect.value = labelFieldOverride;
+      } else {
+        labelFieldSelect.value = '';
+      }
+      refreshAllShapefileLabels();
+
+      alert(t('loadOk'));
+    } catch (err) {
+      console.error(err);
+      alert(t('loadFail'));
+    }
+  }
+
+  btnSaveProject.addEventListener('click', saveProject);
+  btnLoadProject.addEventListener('click', loadProject);
+
+  // ====== EXPORT TITIK CSV ======
+  function exportPointsToCsv() {
+    if (points.length === 0) {
+      alert(t('exportNoPoints'));
+      return;
+    }
+    const header = ['ID', 'Name', 'Lat', 'Lng', 'Note'];
+    const rows = points.map(p => [
+      p.id,
+      '"' + (p.name || '').replace(/"/g, '""') + '"',
+      p.lat,
+      p.lng,
+      '"' + (p.note || '').replace(/"/g, '""') + '"'
+    ]);
+
+    let csv = header.join(',') + '\n';
+    rows.forEach(r => { csv += r.join(',') + '\n'; });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'titik_webgis.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  btnExportPointsCsv.addEventListener('click', exportPointsToCsv);
+
+  // ========= WIDGET PRO =========
+  const widgetBox = document.getElementById('widgetBox');
+  const widgetTime = document.getElementById('widgetTime');
+  const widgetWeather = document.getElementById('widgetWeather');
+  const widgetCoord = document.getElementById('widgetCoord');
+  const widgetElevation = document.getElementById('widgetElevation');
+  const widgetCompass = document.getElementById('widgetCompass');
+  const widgetSpeed = document.getElementById('widgetSpeed');
+  const widgetSun = document.getElementById('widgetSun');
+  const widgetCollapse = document.getElementById('widgetCollapse');
+
+  // JAM REAL-TIME BERBASIS POSISI PETA / GPS
+  let clockUseGpsCenter = false;
+  let lastGpsCoordForClock = null;
+
+  function getOffsetFromLng(lng) {
+    if (!isFinite(lng)) return 0;
+    let off = Math.round(lng / 15);
+    if (off < -12) off = -12;
+    if (off > 14) off = 14;
+    return off;
+  }
+
+  function formatOffset(off) {
+    if (off === 0) return '±0';
+    return off > 0 ? '+' + off : off.toString();
+  }
+
+  function getClockLngSource() {
+    if (clockUseGpsCenter && lastGpsCoordForClock) {
+      return lastGpsCoordForClock.lng;
+    }
+    const center = map.getCenter();
+    return center.lng;
+  }
+
+  function updateClockWidget() {
+    const lng = getClockLngSource();
+    const offset = getOffsetFromLng(lng);
+
+    const now = new Date();
+    const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+    const localMs = utcMs + offset * 3600000;
+    const local = new Date(localMs);
+
+    const options = {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    };
+
+    const jam = local.toLocaleTimeString(
+      langState === 'id' ? 'id-ID' : 'en-GB',
+      options
+    );
+
+    const zoneLabel = `UTC${formatOffset(offset)}`;
+    const labelPrefix = langState === 'id' ? 'Jam' : 'Time';
+
+    widgetTime.innerHTML = `🕒 ${labelPrefix}: ${jam} (${zoneLabel})`;
+  }
+
+  // update tiap detik
+  setInterval(updateClockWidget, 1000);
+
+  // update ketika peta selesai digeser
+  map.on('moveend', updateClockWidget);
+
+  // COLLAPSE
+  widgetCollapse.addEventListener('click', () => {
+    widgetBox.classList.toggle('collapsed');
+    widgetCollapse.textContent = widgetBox.classList.contains('collapsed') ? '🔼' : '🔽';
+  });
+
+  // UTIL KONVERSI DERAJAT → MATA ANGIN
+  function degToCompassText(deg) {
+    const dirsId = ['Utara','Timur Laut','Timur','Tenggara','Selatan','Barat Daya','Barat','Barat Laut'];
+    const dirsEn = ['N','NE','E','SE','S','SW','W','NW'];
+    const idx = Math.round(deg / 45) % 8;
+    return (langState === 'id' ? dirsId : dirsEn)[idx];
+  }
+
+  // CUACA + MATAHARI (Open-Meteo)
+  async function updateWeatherAndSun(lat, lon) {
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&current_weather=true&daily=sunrise,sunset&timezone=auto`;
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      const cw = data.current_weather;
+      const temp = cw.temperature;
+      const code = cw.weathercode;
+
+      const weatherTextId = {
+        0: 'Cerah',
+        1: 'Cerah berawan',
+        2: 'Berawan sebagian',
+        3: 'Mendung',
+        45: 'Berkabut',
+        48: 'Kabut beku',
+        51: 'Gerimis ringan',
+        53: 'Gerimis',
+        55: 'Gerimis lebat',
+        61: 'Hujan ringan',
+        63: 'Hujan',
+        65: 'Hujan lebat',
+        80: 'Hujan lokal',
+        95: 'Badai petir'
+      };
+
+      const weatherTextEn = {
+        0: 'Clear',
+        1: 'Mainly clear',
+        2: 'Partly cloudy',
+        3: 'Overcast',
+        45: 'Fog',
+        48: 'Depositing rime fog',
+        51: 'Light drizzle',
+        53: 'Drizzle',
+        55: 'Heavy drizzle',
+        61: 'Light rain',
+        63: 'Rain',
+        65: 'Heavy rain',
+        80: 'Rain showers',
+        95: 'Thunderstorm'
+      };
+
+      const wt = langState === 'id'
+        ? (weatherTextId[code] || 'Cuaca')
+        : (weatherTextEn[code] || 'Weather');
+
+      widgetWeather.innerHTML =
+        `🌡️ ${temp}°C | ${wt}`;
+
+      const sunriseRaw = data.daily.sunrise[0].split('T')[1].slice(0,5);
+      const sunsetRaw = data.daily.sunset[0].split('T')[1].slice(0,5);
+      if (langState === 'id') {
+        widgetSun.innerHTML = `☀️ Terbit ${sunriseRaw} • Terbenam ${sunsetRaw}`;
+      } else {
+        widgetSun.innerHTML = `☀️ Sunrise ${sunriseRaw} • Sunset ${sunsetRaw}`;
+      }
+    } catch (err) {
+      // ignore jika offline
+    }
+  }
+
+  // ELEVASI (Open-Meteo Elevation API)
+  async function updateElevation(lat, lon) {
+    const url = `https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      const elev = data.elevation && data.elevation[0];
+      if (typeof elev === 'number') {
+        const text = langState === 'id'
+          ? `⛰️ Elevasi: ${elev.toFixed(0)} m`
+          : `⛰️ Elevation: ${elev.toFixed(0)} m`;
+        widgetElevation.innerHTML = text;
+      }
+    } catch (err) {}
+  }
+
+  // UPDATE WIDGET DARI POSISI MAP
+  function updateEnvWidgetsFromMap() {
+    const c = map.getCenter();
+    updateWeatherAndSun(c.lat, c.lng);
+    updateElevation(c.lat, c.lng);
+  }
+
+  map.on('moveend', () => {
+    updateEnvWidgetsFromMap();
+  });
+
+  // KOORDINAT REALTIME
+  map.on('mousemove', (e) => {
+    const labelLat = 'Lat';
+    const labelLon = 'Lon';
+    widgetCoord.innerHTML =
+      `📍 ${labelLat}: ${e.latlng.lat.toFixed(5)}  ${labelLon}: ${e.latlng.lng.toFixed(5)}`;
+  });
+
+  // KOMPAS (DEVICE ORIENTATION)
+  if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', (e) => {
+      let arah = e.alpha;
+      if (arah != null) {
+        arah = (Math.round(arah) + 360) % 360;
+        const dir = degToCompassText(arah);
+        const label = langState === 'id' ? 'Kompas' : 'Compass';
+        widgetCompass.innerHTML = `🧭 ${label}: ${arah}° (${dir})`;
+      }
+    });
+  }
+
+  // GPS TRACKING & KECEPATAN
+  let gpsWatchId = null;
+  let gpsMarker = null;
+  let gpsTrack = null;
+  let lastGpsLatLng = null;
+  let lastGpsTime = null;
+  let gpsActive = false;
+
+  function setSpeedKmPerHour(v) {
+    const label = langState === 'id' ? 'Kecepatan' : 'Speed';
+    widgetSpeed.innerHTML = `🚶 ${label}: ${v.toFixed(1)} km/jam`;
+  }
+
+  function startGPS() {
+    if (!navigator.geolocation) {
+      alert(t('gpsNotSupported'));
+      return;
+    }
+
+    gpsActive = true;
+    btnToggleGPS.classList.add('btn-toggle-active');
+    btnToggleGPS.title = 'GPS ON';
+
+    gpsWatchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const latlng = L.latLng(lat, lon);
+
+        if (!gpsMarker) {
+          gpsMarker = L.circleMarker(latlng, {
+            radius: 7,
+            color: '#22c55e',
+            weight: 2,
+            fillColor: '#22c55e',
+            fillOpacity: 1
+          }).addTo(map);
+          gpsMarker.bindPopup('Posisi saya / My position');
+        } else {
+          gpsMarker.setLatLng(latlng);
         }
 
-        function style_ADMINISTRASI_LN_50K_6_0() {
-            return {
-                pane: 'pane_ADMINISTRASI_LN_50K_6',
-                opacity: 1,
-                color: 'rgba(39,41,27,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 1.0,
-                fillOpacity: 0,
-                interactive: true,
-            }
+        if (!gpsTrack) {
+          gpsTrack = L.polyline([latlng], { color: '#22c55e', weight: 3 }).addTo(map);
+        } else {
+          gpsTrack.addLatLng(latlng);
         }
-        map.createPane('pane_ADMINISTRASI_LN_50K_6');
-        map.getPane('pane_ADMINISTRASI_LN_50K_6').style.zIndex = 406;
-        map.getPane('pane_ADMINISTRASI_LN_50K_6').style['mix-blend-mode'] = 'normal';
-        var layer_ADMINISTRASI_LN_50K_6 = new L.geoJson(json_ADMINISTRASI_LN_50K_6, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_ADMINISTRASI_LN_50K_6',
-            layerName: 'layer_ADMINISTRASI_LN_50K_6',
-            pane: 'pane_ADMINISTRASI_LN_50K_6',
-            onEachFeature: pop_ADMINISTRASI_LN_50K_6,
-            style: style_ADMINISTRASI_LN_50K_6_0,
-        });
-        bounds_group.addLayer(layer_ADMINISTRASI_LN_50K_6);
-        map.addLayer(layer_ADMINISTRASI_LN_50K_6);
-        var overlaysTree = [
-            {label: '<img src="legend/ADMINISTRASI_LN_50K_6.png" /> ADMINISTRASI_LN_50K', layer: layer_ADMINISTRASI_LN_50K_6},
-            {label: '<img src="legend/PUSKESMAS_PT_50K_5.png" /> PUSKESMAS_PT_50K', layer: layer_PUSKESMAS_PT_50K_5},
-            {label: "Open Map", layer: layer_OpenMap_4},
-            {label: "Google Labels", layer: layer_GoogleLabels_3},
-            {label: "Google Road", layer: layer_GoogleRoad_2},
-            {label: "Google Labels", layer: layer_GoogleLabels_1},
-            {label: "Google Road", layer: layer_GoogleRoad_0},]
-        var lay = L.control.layers.tree(null, overlaysTree,{
-            //namedToggle: true,
-            //selectorBack: false,
-            //closedSymbol: '&#8862; &#x1f5c0;',
-            //openedSymbol: '&#8863; &#x1f5c1;',
-            //collapseAll: 'Collapse all',
-            //expandAll: 'Expand all',
-            collapsed: true,
-        });
-        lay.addTo(map);
-        setBounds();
-        </script>
-    </body>
+
+        let speedKmh = 0;
+        if (pos.coords.speed != null && !isNaN(pos.coords.speed)) {
+          speedKmh = pos.coords.speed * 3.6; // m/s → km/h
+        } else if (lastGpsLatLng && lastGpsTime) {
+          const now = Date.now();
+          const dt = (now - lastGpsTime) / 1000;
+          if (dt > 0) {
+            const distKm = turf.distance(
+              [lastGpsLatLng.lng, lastGpsLatLng.lat],
+              [latlng.lng, latlng.lat],
+              { units: 'kilometers' }
+            );
+            speedKmh = distKm * 3600 / dt;
+          }
+        }
+
+        setSpeedKmPerHour(speedKmh);
+
+        lastGpsLatLng = latlng;
+        lastGpsTime = Date.now();
+
+        map.setView(latlng, Math.max(map.getZoom(), 16));
+      },
+      (err) => {
+        console.error(err);
+        alert(t('gpsError', err.message));
+        stopGPS();
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 20000
+      }
+    );
+  }
+
+  function stopGPS() {
+    gpsActive = false;
+    btnToggleGPS.classList.remove('btn-toggle-active');
+    btnToggleGPS.title = 'GPS OFF';
+    if (gpsWatchId != null) {
+      navigator.geolocation.clearWatch(gpsWatchId);
+      gpsWatchId = null;
+    }
+    if (gpsMarker) {
+      map.removeLayer(gpsMarker);
+      gpsMarker = null;
+    }
+    if (gpsTrack) {
+      map.removeLayer(gpsTrack);
+      gpsTrack = null;
+    }
+    lastGpsLatLng = null;
+    lastGpsTime = null;
+    setSpeedKmPerHour(0);
+  }
+
+  btnToggleGPS.addEventListener('click', () => {
+    if (gpsActive) stopGPS();
+    else startGPS();
+  });
+
+  // ====== THEME TOGGLE ======
+  function applyTheme() {
+    if (themeState === 'light') {
+      document.body.classList.add('light-theme');
+      btnTheme.textContent = '🌙';
+    } else {
+      document.body.classList.remove('light-theme');
+      btnTheme.textContent = '☀️';
+    }
+    updateDockTooltips();
+  }
+
+  btnTheme.addEventListener('click', () => {
+    themeState = themeState === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('webgis_theme', themeState);
+    applyTheme();
+  });
+
+  // ====== LANG TOGGLE ======
+  function updateDockTooltips() {
+    if (langState === 'id') {
+      btnResetIndonesia.title = 'Reset Indonesia';
+      btnZoomAllLayers.title = 'Zoom semua layer';
+      btnMeasureDistance.title = 'Ukur jarak / Measure distance';
+      btnMeasureArea.title = 'Ukur luas / Measure area';
+      btnClearMeasure.title = 'Hapus ukuran / Clear measurement';
+      btnToggleGPS.title = gpsActive ? 'GPS ON' : 'GPS OFF';
+      btnTheme.title = themeState === 'dark'
+        ? 'Ubah ke tema terang'
+        : 'Ubah ke tema gelap';
+      btnLang.title = 'Switch to English';
+    } else {
+      btnResetIndonesia.title = 'Reset to Indonesia';
+      btnZoomAllLayers.title = 'Zoom all layers';
+      btnMeasureDistance.title = 'Measure distance';
+      btnMeasureArea.title = 'Measure area';
+      btnClearMeasure.title = 'Clear measurement';
+      btnToggleGPS.title = gpsActive ? 'GPS ON' : 'GPS OFF';
+      btnTheme.title = themeState === 'dark'
+        ? 'Switch to light theme'
+        : 'Switch to dark theme';
+      btnLang.title = 'Ganti ke Bahasa Indonesia';
+    }
+  }
+
+  function applyLanguageAll() {
+    applyLanguageToUI();
+    renderLabelFieldSelect();
+    measureInfoEl.textContent = t(
+      measureMode === 'none'
+        ? 'measureNormal'
+        : (measureMode === 'distance' ? 'measureDistanceStart' : 'measureAreaStart')
+    );
+    btnLang.textContent = langState === 'id' ? '🇮🇩' : '🇬🇧';
+    updateDockTooltips();
+    applyPointModalLanguage();
+    updateEnvWidgetsFromMap();
+    renderPointList();
+    renderLayerList();
+    clearAttributes();
+
+    // widget placeholders
+    widgetCoord.innerHTML = (langState === 'id')
+      ? '📍 Lat: -- Lon: --'
+      : '📍 Lat: -- Lon: --';
+    widgetElevation.innerHTML = (langState === 'id')
+      ? '⛰️ Elevasi: -- m'
+      : '⛰️ Elevation: -- m';
+    widgetCompass.innerHTML = (langState === 'id')
+      ? '🧭 Kompas: --° (--)'
+      : '🧭 Compass: --° (--)';
+    widgetSun.innerHTML = (langState === 'id')
+      ? '☀️ Matahari: --'
+      : '☀️ Sun: --';
+    setSpeedKmPerHour(0);
+
+    // update compass label based on current rotation
+    updateCompassWidgetFromRotation();
+
+    // widget gadget titles
+    const titleClock = document.getElementById('widgetTitleClock');
+    const titleWeather = document.getElementById('widgetTitleWeather');
+    const titleLocation = document.getElementById('widgetTitleLocation');
+    const titleSystem = document.getElementById('widgetTitleSystem');
+    if (titleClock) {
+      titleClock.textContent = (langState === 'id')
+        ? 'Jam & Tanggal'
+        : 'Clock & Date';
+    }
+    if (titleWeather) {
+      titleWeather.textContent = (langState === 'id')
+        ? 'Cuaca & Matahari'
+        : 'Weather & Sun';
+    }
+    if (titleLocation) {
+      titleLocation.textContent = (langState === 'id')
+        ? 'Lokasi & Elevasi'
+        : 'Location & Elevation';
+    }
+    if (titleSystem) {
+      titleSystem.textContent = (langState === 'id')
+        ? 'Gerak & Kompas'
+        : 'Motion & Compass';
+    }
+  }
+
+  btnLang.addEventListener('click', () => {
+    langState = langState === 'id' ? 'en' : 'id';
+    localStorage.setItem('webgis_lang', langState);
+    applyLanguageAll();
+  });
+
+
+  // ===== NAVIGATOR EVENTS =====
+  const navDirButtons = document.querySelectorAll('.nav-btn-dir');
+  const navZoomButtons = document.querySelectorAll('.nav-zoom-btn');
+
+  function panByDirection(dir) {
+    const step = 150;
+    switch (dir) {
+      case 'n':
+        map.panBy([0, -step]);
+        break;
+      case 's':
+        map.panBy([0, step]);
+        break;
+      case 'w':
+        map.panBy([-step, 0]);
+        break;
+      case 'e':
+        map.panBy([step, 0]);
+        break;
+    }
+  }
+
+  navDirButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const dir = btn.getAttribute('data-dir');
+      panByDirection(dir);
+    });
+  });
+
+  navZoomButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-zoom');
+      if (mode === 'in') map.zoomIn();
+      if (mode === 'out') map.zoomOut();
+    });
+  });
+
+  
+  // ===== MAP ROTATION via Navigator Ring =====
+  let mapRotation = 0;
+  const rotationStep = 15;
+  const mapPane = map.getPane('mapPane');
+  const widgetCompassEl = document.getElementById('widgetCompass');
+
+  function headingFromRotation() {
+    return (360 - (mapRotation % 360) + 360) % 360;
+  }
+
+  function headingToDir(deg) {
+    const dirs = ['N','NE','E','SE','S','SW','W','NW','N'];
+    const idx = Math.round(((deg % 360) / 45));
+    return dirs[(idx + 8) % 8];
+  }
+
+  function updateCompassWidgetFromRotation() {
+    if (!widgetCompassEl) return;
+    const heading = headingFromRotation();
+    const dir = headingToDir(heading);
+
+    const isNorth = heading < 10 || heading > 350;
+    const isSouth = heading > 170 && heading < 190;
+    let extra = '';
+    if (isNorth) extra = ' (North)';
+    else if (isSouth) extra = ' (South)';
+
+    widgetCompassEl.textContent =
+      `Kompas: ${heading.toFixed(0)}° (${dir})${extra}`;
+  }
+
+  function applyMapRotation() {
+    if (!mapPane) return;
+    mapPane.style.transition = 'transform 150ms ease-out';
+    mapPane.style.transform = `rotate(${mapRotation}deg)`;
+
+    const fixAngle = -mapRotation;
+    const selectors =
+      '.leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-tooltip, .leaflet-popup';
+    document.querySelectorAll(selectors).forEach((el) => {
+      el.style.transition = 'none';
+      el.style.transform = `rotate(${fixAngle}deg)`;
+    });
+
+    updateCompassWidgetFromRotation();
+  }
+
+  function rotateMapBy(deltaDeg) {
+    mapRotation = (mapRotation + deltaDeg + 360) % 360;
+    applyMapRotation();
+  }
+
+  function setMapRotation(deg) {
+    mapRotation = ((deg % 360) + 360) % 360;
+    applyMapRotation();
+  }
+
+  // klik ring navigator untuk rotasi (mode B: area sedang)
+  const navRingEl = document.querySelector('.navigator-inner');
+  if (navRingEl) {
+    navRingEl.addEventListener('click', (e) => {
+      const rect = navRingEl.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const w = rect.width;
+      const h = rect.height;
+
+      if (x < w * 0.3) {
+        rotateMapBy(-rotationStep);       // kiri
+      } else if (x > w * 0.7) {
+        rotateMapBy(rotationStep);        // kanan
+      } else if (y < h * 0.2) {
+        setMapRotation(0);                // atas -> North
+      } else if (y > h * 0.8) {
+        setMapRotation(180);              // bawah -> South view
+      }
+    });
+  }
+
+  // sinkron awal
+  applyMapRotation();
+
+// Inisialisasi
+  applyTheme();
+  applyLanguageAll();
+  updateEnvWidgetsFromMap();
+
+  // Pastikan map di-render dengan benar
+  setTimeout(() => map.invalidateSize(), 100);
+</script>
+</body>
 </html>
