@@ -3120,5 +3120,76 @@ body.light-theme #widgetSpeed {
   // Pastikan map di-render dengan benar
   setTimeout(() => map.invalidateSize(), 100);
 </script>
+
+<script>
+// === FULL EXPANDED MODE ===
+(function(){
+ const sheet=document.querySelector('.sidebar');
+ if(!sheet) return;
+ let startY=0, currentY=0, dragging=false;
+ let expanded=false;
+ sheet.addEventListener('touchmove', e=>{
+   if(!dragging) return;
+   currentY=e.touches[0].clientY;
+ });
+ window.addEventListener('touchend', e=>{
+   if(!dragging) return;
+   dragging=false;
+   const diff=currentY-startY;
+   if(diff<-120){ sheet.style.maxHeight='90vh'; expanded=true; }
+   else if(diff>120){ sheet.style.maxHeight='55vh'; expanded=false; }
+ });
+})();
+
+// === SMART NAVIGATOR ORIENTATION ===
+if(window.DeviceOrientationEvent){
+ window.addEventListener('deviceorientation', e=>{
+   const alpha=e.alpha;
+   const nav=document.querySelector('.navigator-inner');
+   if(nav && alpha!=null){ nav.style.transform=`rotate(${alpha}deg)`; }
+ });
+}
+
+// === SWIPE FROM BOTTOM TO OPEN PANEL ===
+(function(){
+ const threshold=60;
+ let touchStartY=0;
+ window.addEventListener('touchstart',e=>{ touchStartY=e.touches[0].clientY });
+ window.addEventListener('touchend',e=>{
+   const endY=e.changedTouches[0].clientY;
+   if(touchStartY > window.innerHeight - threshold && endY < touchStartY-30){
+     document.querySelector('.sidebar')?.classList.add('sidebar--open');
+   }
+ });
+})();
+
+// === ADAPTIVE TABLET LAYOUT ===
+(function(){
+ const w=window.innerWidth;
+ if(w>850){
+   const side=document.querySelector('.sidebar');
+   if(side){
+     side.style.position='absolute';
+     side.style.width='360px';
+     side.style.maxHeight='90vh';
+     side.style.transform='none';
+   }
+ }
+})();
+
+// === MINI FLOATING PANEL MODE ===
+(function(){
+ let mapIsMoving=false;
+ if(window.map){
+   map.on('movestart',()=>{ mapIsMoving=true; });
+   map.on('moveend',()=>{
+     mapIsMoving=false;
+     const sheet=document.querySelector('.sidebar');
+     if(sheet) sheet.classList.remove('sidebar--open');
+   });
+ }
+})();
+</script>
+
 </body>
 </html>
