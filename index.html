@@ -925,6 +925,102 @@ body.light-theme #widgetSpeed {
   }
 }
 </style>
+
+<style>
+/* ===== MOBILE LAYOUT FIX OVERRIDE ===== */
+@media (max-width: 768px) {
+
+  /* App in column so map not squeezed horizontally */
+  .app {
+    flex-direction: column;
+  }
+
+  /* Sidebar as bottom sheet overlay, not pushing map */
+  .sidebar {
+    position: fixed !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 55vh;
+    border-radius: 18px 18px 0 0;
+    overflow-y: auto;
+    z-index: 1200;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out, box-shadow 0.25s ease-out;
+  }
+
+  .sidebar.sidebar--open {
+    transform: translateY(0);
+    box-shadow: 0 -20px 40px rgba(0,0,0,0.65);
+  }
+
+  /* Map always full height behind sheets */
+  .map-wrapper,
+  #map {
+    height: 100vh !important;
+  }
+
+  /* Widgets smaller & tucked to top-right */
+  .widgets-panel {
+    top: 8px;
+    right: 8px;
+    transform: scale(0.8);
+    transform-origin: top right;
+    z-index: 1100;
+  }
+
+  .widget-card {
+    font-size: 11px;
+  }
+
+  /* Dock floats above bottom sheet */
+  .dock {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 72px;
+    z-index: 1250;
+  }
+
+  /* Navigator smaller & above dock */
+  .navigator-wrapper {
+    bottom: 150px;
+    right: 12px;
+    transform: scale(0.8);
+    transform-origin: bottom right;
+    z-index: 1240;
+  }
+
+  /* Toggle button for panel */
+  .mobile-sidebar-toggle {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.7);
+    background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(15,23,42,0.85));
+    color: #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    z-index: 1300;
+  }
+}
+
+/* hide mobile toggle on real desktop */
+@media (min-width: 769px) {
+  .mobile-sidebar-toggle {
+    display: none !important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -3121,73 +3217,29 @@ body.light-theme #widgetSpeed {
   setTimeout(() => map.invalidateSize(), 100);
 </script>
 
+<button class="mobile-sidebar-toggle" id="mobileSidebarToggle">
+  <span>⬆</span> Panel &amp; Tools
+</button>
+
+
 <script>
-// === FULL EXPANDED MODE ===
+// basic mobile sidebar toggle
 (function(){
- const sheet=document.querySelector('.sidebar');
- if(!sheet) return;
- let startY=0, currentY=0, dragging=false;
- let expanded=false;
- sheet.addEventListener('touchmove', e=>{
-   if(!dragging) return;
-   currentY=e.touches[0].clientY;
- });
- window.addEventListener('touchend', e=>{
-   if(!dragging) return;
-   dragging=false;
-   const diff=currentY-startY;
-   if(diff<-120){ sheet.style.maxHeight='90vh'; expanded=true; }
-   else if(diff>120){ sheet.style.maxHeight='55vh'; expanded=false; }
- });
-})();
-
-// === SMART NAVIGATOR ORIENTATION ===
-if(window.DeviceOrientationEvent){
- window.addEventListener('deviceorientation', e=>{
-   const alpha=e.alpha;
-   const nav=document.querySelector('.navigator-inner');
-   if(nav && alpha!=null){ nav.style.transform=`rotate(${alpha}deg)`; }
- });
-}
-
-// === SWIPE FROM BOTTOM TO OPEN PANEL ===
-(function(){
- const threshold=60;
- let touchStartY=0;
- window.addEventListener('touchstart',e=>{ touchStartY=e.touches[0].clientY });
- window.addEventListener('touchend',e=>{
-   const endY=e.changedTouches[0].clientY;
-   if(touchStartY > window.innerHeight - threshold && endY < touchStartY-30){
-     document.querySelector('.sidebar')?.classList.add('sidebar--open');
-   }
- });
-})();
-
-// === ADAPTIVE TABLET LAYOUT ===
-(function(){
- const w=window.innerWidth;
- if(w>850){
-   const side=document.querySelector('.sidebar');
-   if(side){
-     side.style.position='absolute';
-     side.style.width='360px';
-     side.style.maxHeight='90vh';
-     side.style.transform='none';
-   }
- }
-})();
-
-// === MINI FLOATING PANEL MODE ===
-(function(){
- let mapIsMoving=false;
- if(window.map){
-   map.on('movestart',()=>{ mapIsMoving=true; });
-   map.on('moveend',()=>{
-     mapIsMoving=false;
-     const sheet=document.querySelector('.sidebar');
-     if(sheet) sheet.classList.remove('sidebar--open');
-   });
- }
+  const btn = document.getElementById('mobileSidebarToggle');
+  const sidebar = document.querySelector('.sidebar');
+  if(!btn || !sidebar) return;
+  function setLabel(open){
+    btn.innerHTML = open ? '<span>⬇</span> Tutup Panel' : '<span>⬆</span> Panel &amp; Tools';
+  }
+  btn.addEventListener('click', ()=>{
+    const open = sidebar.classList.toggle('sidebar--open');
+    setLabel(open);
+  });
+  // close panel by default on small screens
+  if (window.innerWidth <= 768) {
+    sidebar.classList.remove('sidebar--open');
+    setLabel(false);
+  }
 })();
 </script>
 
