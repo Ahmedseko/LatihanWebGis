@@ -1062,6 +1062,20 @@ body.light-theme #widgetSpeed {
     display: none !important;
   }
 }
+
+/* PATCH MOBILE DI SINI */
+@media (max-width:640px){
+  .dock-tooltip,
+  .dock-label,
+  .dock-button-label {
+    margin-bottom: 22px !important;
+  }
+  .dock-item[data-tooltip]::after {
+    transform: translate(-50%, -22px) !important;
+  }
+}
+/* END PATCH */
+
 </style>
 </head>
 <body>
