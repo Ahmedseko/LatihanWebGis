@@ -1063,29 +1063,16 @@ body.light-theme #widgetSpeed {
   }
 }
 
-/* =========================
-   GESER TOOLTIP DOCK DI HP
-   ========================= */
-@media (max-width: 640px) {
 
-  /* Tooltip/bubble di atas dock (teks "↑ Panel & Tools") */
-  .dock-tooltip,
-  .dock-label,
-  .dock-button-label {
-    position: absolute;
-    /* Naikkan sedikit lagi dari posisi semula */
-    margin-bottom: 18px !important;
+  /* =========================
+     PATCH MOBILE TOOLTIP PANEL & TOOLS
+     ========================= */
+  @media (max-width: 640px) {
+    /* Geser tooltip semua tombol dock sedikit ke atas supaya tidak menimpa dock */
+    .map-top-bar [data-tooltip]::after {
+      transform: translate(-50%, -26px) !important;
+    }
   }
-
-  /* Kalau tooltip dibuat pakai data-tooltip + ::after */
-  .dock-item[data-tooltip]::after,
-  .dock-button[data-tooltip]::after {
-    /* geser ke atas 18px */
-    transform: translate(-50%, -18px) !important;
-  }
-}
-
-/* END PATCH */
 
 </style>
 </head>
