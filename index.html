@@ -447,6 +447,26 @@
         bottom: 12px;
       }
 
+      .mobile-sidebar-toggle {
+        position: fixed;
+        left: 16px;
+        bottom: 72px;
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        background: rgba(15,23,42,0.95);
+        color: #e5e7eb;
+        border: 1px solid rgba(148,163,184,0.6);
+        box-shadow: 0 16px 32px rgba(15,23,42,0.9);
+        z-index: 1400;
+      }
+
+
+
       .map-measure-info {
         top: 10px;
       }
@@ -841,10 +861,6 @@ body.light-theme #widgetSpeed {
   box-shadow: 0 8px 18px rgba(0,0,0,0.6);
   background: radial-gradient(circle, rgba(15,23,42,0.7) 0%, rgba(15,23,42,0.2) 55%, transparent 70%);
   position: relative;
-
-  /* enable interaction on ring */
-  pointer-events: auto;
-  cursor: pointer;
 }
 
 .nav-ring {
@@ -925,44 +941,10 @@ body.light-theme #widgetSpeed {
   }
 }
 
-/* ==== MOBILE LAYOUT REFINEMENTS (WIDGET + DOCK + PANEL BUTTON) ==== */
-@media (max-width: 768px) {
-  /* Compact widgets */
-  .widget-stack {
-    transform: scale(0.72);
-    transform-origin: top right;
-    top: 6px !important;
-    right: 6px !important;
-    gap: 6px !important;
-  }
-  .widget-gadget {
-    width: 190px !important;
-    font-size: 10px !important;
-  }
-  .widget-title {
-    font-size: 10px !important;
-  }
-  .widget-content {
-    padding: 4px 8px !important;
-  }
 
-  /* Dock floats above bottom UI */
-  .dock {
-    position: fixed !important;
-    bottom: 82px !important;
-    left: 50% !important;
-    transform: translateX(-50%);
-    z-index: 1500 !important;
-  }
-
-  /* Panel & Tools button below dock, not overlapping */
+@media (min-width: 769px) {
   .mobile-sidebar-toggle {
-    bottom: 18px !important;
-    z-index: 2000 !important;
-    padding: 6px 14px;
-    font-size: 11px;
-    opacity: 0.88;
-    backdrop-filter: blur(8px);
+    display: none !important;
   }
 }
 
@@ -1157,6 +1139,10 @@ body.light-theme #widgetSpeed {
   <div class="map-wrapper">
     <div id="map"></div>
 
+    <!-- Mobile Sidebar FAB -->
+    <button id="mobileSidebarBtn" class="mobile-sidebar-toggle">☰</button>
+
+
     <!-- NAVIGATOR CONTROL -->
     <div class="navigator-wrapper">
       <div class="navigator-inner">
@@ -1226,7 +1212,7 @@ body.light-theme #widgetSpeed {
 
 <!-- DOCK (bawah) -->
 
-    <div class="map-top-bar dock">
+    <div class="map-top-bar">
       <button class="dock-btn" id="btnResetIndonesia" title="Reset Indonesia">🌏</button>
       <button class="dock-btn" id="btnZoomAllLayers" title="Zoom semua layer">🛰️</button>
       <button class="dock-btn" id="btnMeasureDistance" title="Ukur jarak / Measure distance">📏</button>
@@ -2394,6 +2380,15 @@ body.light-theme #widgetSpeed {
     setTimeout(() => map.invalidateSize(), 300);
   });
 
+
+  const mobileSidebarBtn = document.getElementById('mobileSidebarBtn');
+  if (mobileSidebarBtn) {
+    mobileSidebarBtn.addEventListener('click', () => {
+      toggleSidebarBtn.click();
+    });
+  }
+
+
   // ====== MEASURE TOOLS ======
   function updateMeasureInfoTextDistance(hasResult, distM, distKm) {
     if (!hasResult) {
@@ -2996,9 +2991,6 @@ body.light-theme #widgetSpeed {
       ? '☀️ Matahari: --'
       : '☀️ Sun: --';
     setSpeedKmPerHour(0);
-
-    // update compass label based on current rotation
-    updateCompassWidgetFromRotation();
 
     // widget gadget titles
     const titleClock = document.getElementById('widgetTitleClock');
