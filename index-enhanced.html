@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>SEKO FIELD - Enhanced</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Drawing Tools -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+
+  <style>
+    /* ===== ROOT & GLOBALS ===== */
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #1e40af;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg-dark: #0f172a;
+      --bg-darker: #020617;
+      --text-light: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border: rgba(148, 163, 184, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      background: var(--bg-darker);
+      color: var(--text-light);
+      overflow: hidden;
+    }
+
+    body.light-theme {
+      --bg-dark: #f8fafc;
+      --bg-darker: #f1f5f9;
+      --text-light: #1e293b;
+      --text-muted: #64748b;
+      --border: rgba(100, 116, 139, 0.2);
+    }
+
+    /* ===== APP LAYOUT ===== */
+    .app {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #111827, var(--bg-darker));
+      position: relative;
+    }
+
+    body.light-theme .app {
+      background: radial-gradient(circle at top, #e2e8f0, var(--bg-darker));
+    }
+
+    /* ===== HEADER/STATUS BAR ===== */
+    .status-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      gap: 12px;
+      z-index: 1500;
+      font-size: 11px;
+    }
+
+    body.light-theme .status-bar {
+      background: linear-gradient(90deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.9));
+      color: #1e293b;
+    }
+
+    .status-bar-left, .status-bar-right {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    body.light-theme .status-item {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .status-label {
+      color: var(--text-muted);
+      min-width: 60px;
+    }
+
+    .status-value {
+      font-weight: 600;
+      color: #22c55e;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      display: flex;
+      flex: 1;
+      margin-top: 32px;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      position: relative;
+      width: 320px;
+      height: calc(100vh - 32px);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.96));
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    body.light-theme .sidebar {
+      background: linear-gradient(135deg, rgba(241, 245, 249, 0.98), rgba(248, 250, 252, 0.96));
+      color: #1e293b;
+    }
+
+    /* ===== TABS SYSTEM ===== */
+    .sidebar-header {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 200ms ease;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .tab-btn:hover {
+      color: var(--text-light);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    body.light-theme .tab-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    /* ===== TAB CONTENT ===== */
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 10px;
+      display: none;
+    }
+
+    .tab-content.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== SECTION STYLES ===== */
+    .sidebar-section {
+      margin-bottom: 12px;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    body.light-theme .sidebar-section {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .section-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.15));
+      color: var(--text-light);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 150ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(99, 102, 241, 0.3));
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .btn.btn-success {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.15));
+      color: #22c55e;
+    }
+
+    .btn.btn-success:hover {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(34, 197, 94, 0.3));
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn.btn-danger {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(248, 113, 113, 0.15));
+      color: #ef4444;
+    }
+
+    .btn.btn-danger:hover {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.35), rgba(248, 113, 113, 0.3));
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+
+    .btn.btn-sm {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    /* ===== INPUTS ===== */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="search"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 6px 10px;
+      margin: 4px 0;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-light);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      transition: all 150ms ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      background: rgba(59, 130, 246, 0.15);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+
+    body.light-theme input,
+    body.light-theme select,
+    body.light-theme textarea {
+      background: rgba(0, 0, 0, 0.05);
+      color: #1e293b;
+      border-color: var(--border);
+    }
+
+    /* ===== MAP CONTAINER ===== */
+    #map {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at center, #1e293b, #0f172a);
+      z-index: 10;
+    }
+
+    body.light-theme #map {
+      background: radial-gradient(circle at center, #e2e8f0, #f1f5f9);
+    }
+
+    /* ===== DOCK TOOLBAR ===== */
+    .dock-toolbar {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1100;
+      display: flex;
+      gap: 4px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      max-width: 95vw;
+      overflow-x: auto;
+    }
+
+    body.light-theme .dock-toolbar {
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.9));
+      color: #1e293b;
+    }
+
+    .dock-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 150ms ease;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .dock-btn:hover {
+      background: rgba(59, 130, 246, 0.25);
+      border-color: var(--primary);
+    }
+
+    .dock-btn.active {
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+      color: #022c22;
+      border-color: #22c55e;
+    }
+
+    /* ===== WIDGETS ===== */
+    .widget-stack {
+      position: fixed;
+      top: 40px;
+      right: 12px;
+      z-index: 1050;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .widget-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.85));
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      min-width: 200px;
+      font-size: 11px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+    }
+
+    body.light-theme .widget-card {
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.85));
+      color: #1e293b;
+    }
+
+    .widget-label {
+      display: block;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      font-size: 9px;
+      letter-spacing: 0.5px;
+    }
+
+    .widget-value {
+      display: block;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    /* ===== MODALS ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.96));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    body.light-theme .modal-content {
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.96));
+      color: #1e293b;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 150ms ease;
+    }
+
+    .modal-close:hover {
+      color: var(--danger);
+    }
+
+    /* ===== NOTIFICATIONS ===== */
+    .notification-container {
+      position: fixed;
+      top: 50px;
+      right: 12px;
+      z-index: 2100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 400px;
+    }
+
+    .notification {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      animation: slideIn 300ms ease;
+    }
+
+    .notification.success {
+      border-left-color: var(--success);
+    }
+
+    .notification.warning {
+      border-left-color: var(--warning);
+    }
+
+    .notification.danger {
+      border-left-color: var(--danger);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(400px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* ===== UTILITIES ===== */
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .mb-2 { margin-bottom: 8px; }
+    .mt-2 { margin-top: 8px; }
+    .w-full { width: 100%; }
+
+    /* ===== MOBILE RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .status-bar {
+        font-size: 10px;
+        padding: 0 8px;
+        gap: 8px;
+      }
+
+      .status-bar-right {
+        display: none;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 32px;
+        width: 280px;
+        height: calc(100vh - 32px);
+        transform: translateX(-100%);
+        transition: transform 300ms ease;
+        border-radius: 0 12px 12px 0;
+        z-index: 999;
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        flex: 1;
+        width: 100%;
+      }
+
+      .dock-toolbar {
+        bottom: 12px;
+        padding: 6px 8px;
+        gap: 2px;
+      }
+
+      .dock-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+      }
+
+      .widget-stack {
+        transform: scale(0.7);
+        transform-origin: top right;
+        top: 35px;
+        right: 4px;
+        gap: 3px;
+      }
+
+      .widget-card {
+        min-width: 160px;
+        padding: 6px 8px;
+        font-size: 9px;
+      }
+
+      .modal-content {
+        max-width: 95vw;
+        max-height: 90vh;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .status-bar {
+        padding: 0 6px;
+      }
+
+      .dock-toolbar {
+        font-size: 12px;
+      }
+
+      .notification-container {
+        right: 6px;
+        max-width: calc(100vw - 12px);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-bar-left">
+    <div class="status-item">
+      <span class="status-label">Project:</span>
+      <span class="status-value" id="projectName">Untitled</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Features:</span>
+      <span class="status-value" id="featureCount">0</span>
+    </div>
+  </div>
+  <div class="status-bar-right">
+    <div class="status-item">
+      <span class="status-label">Zoom:</span>
+      <span class="status-value" id="zoomLevel">14</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Mode:</span>
+      <span class="status-value" id="editMode">View</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <!-- TABS -->
+    <div class="sidebar-header">
+      <button class="tab-btn active" data-tab="layers">📍 Layers</button>
+      <button class="tab-btn" data-tab="tools">🎨 Tools</button>
+      <button class="tab-btn" data-tab="analysis">📊 Analysis</button>
+      <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
+    </div>
+
+    <!-- TAB: LAYERS -->
+    <div class="tab-content active" id="tab-layers">
+      <div class="sidebar-section">
+        <div class="section-title">Base Map</div>
+        <select id="basemapSelect" class="w-full">
+          <option value="osm">OpenStreetMap</option>
+          <option value="satellite">Satellite</option>
+          <option value="terrain">Terrain</option>
+        </select>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Point Layers</div>
+        <div id="pointsList" style="max-height: 150px; overflow-y: auto;"></div>
+        <button class="btn btn-sm w-full mt-2">+ New Layer</button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Imported Layers</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" id="btnLoadGpx">📂 GPX</button>
+          <button class="btn btn-sm" id="btnLoadShp">📂 Shapefile</button>
+          <button class="btn btn-sm" id="btnLoadGeoTiff">🖼️ GeoTIFF</button>
+        </div>
+        <input type="file" id="gpxFileEl" style="display:none;" accept=".gpx" />
+        <input type="file" id="shpFileEl" style="display:none;" accept=".zip" />
+        <input type="file" id="tiffFileEl" style="display:none;" accept=".tif,.tiff" />
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Layer Management</div>
+        <div id="layerList" style="max-height: 200px; overflow-y: auto; border-radius: 6px;"></div>
+      </div>
+    </div>
+
+    <!-- TAB: TOOLS -->
+    <div class="tab-content" id="tab-tools">
+      <div class="sidebar-section">
+        <div class="section-title">Drawing Tools</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" id="btnDrawPoint" title="Add Point">📍</button>
+          <button class="btn btn-sm" id="btnDrawLine" title="Draw Line">📏</button>
+          <button class="btn btn-sm" id="btnDrawPolygon" title="Draw Polygon">🔷</button>
+          <button class="btn btn-sm" id="btnDrawCircle" title="Draw Circle">⭕</button>
+          <button class="btn btn-sm" id="btnDrawRect" title="Draw Rectangle">▭</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Edit Mode</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" id="btnEdit" title="Edit Feature">✏️</button>
+          <button class="btn btn-sm btn-danger" id="btnDelete" title="Delete Feature">🗑️</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Measurement</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" id="btnMeasureDistance" title="Measure Distance">📐</button>
+          <button class="btn btn-sm" id="btnMeasureArea" title="Measure Area">📏</button>
+          <button class="btn btn-sm btn-danger" id="btnClearMeasure">Clear</button>
+        </div>
+        <div id="measureInfo" style="margin-top: 6px; padding: 6px; background: rgba(255,255,255,0.05); border-radius: 4px; font-size: 11px; color: #22c55e;"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Quick Add Point</div>
+        <div class="flex-col gap-2">
+          <input type="text" id="pointName" placeholder="Point name" />
+          <div class="flex gap-2">
+            <input type="number" id="utmEasting" placeholder="Easting" style="flex: 1;" />
+            <input type="number" id="utmNorthing" placeholder="Northing" style="flex: 1;" />
+          </div>
+          <div class="flex gap-2">
+            <input type="number" id="utmZone" placeholder="Zone" style="flex: 1;" min="1" max="60" />
+            <select id="utmHemisphere" style="flex: 1;">
+              <option value="N">North</option>
+              <option value="S">South</option>
+            </select>
+          </div>
+          <button class="btn w-full btn-success" id="btnAddFromUTM">Add from UTM</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ANALYSIS -->
+    <div class="tab-content" id="tab-analysis">
+      <div class="sidebar-section">
+        <div class="section-title">Spatial Analysis</div>
+        <div class="section-desc">Analyze features and calculate properties</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" id="btnBuffer" title="Buffer Analysis">◯</button>
+          <button class="btn btn-sm" id="btnIntersect" title="Intersect">∩</button>
+          <button class="btn btn-sm" id="btnUnion" title="Union">∪</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Buffer Distance</div>
+        <input type="number" id="bufferDistance" placeholder="Distance (meters)" value="100" />
+        <button class="btn w-full" id="btnCreateBuffer">Create Buffer</button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Data Filter</div>
+        <input type="search" id="filterFeatures" placeholder="Search features..." />
+        <div id="filterResults" style="margin-top: 6px; font-size: 11px; color: var(--text-muted);"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Statistics</div>
+        <div style="font-size: 11px; line-height: 1.6;">
+          <div><strong>Total Features:</strong> <span id="statTotal">0</span></div>
+          <div><strong>Total Area:</strong> <span id="statArea">0</span> m²</div>
+          <div><strong>Total Length:</strong> <span id="statLength">0</span> m</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: SETTINGS -->
+    <div class="tab-content" id="tab-settings">
+      <div class="sidebar-section">
+        <div class="section-title">Appearance</div>
+        <div class="flex gap-2">
+          <button class="btn btn-sm flex-1" id="btnThemeDark">🌙 Dark</button>
+          <button class="btn btn-sm flex-1" id="btnThemeLight">☀️ Light</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Language</div>
+        <select id="languageSelect" class="w-full">
+          <option value="id">Bahasa Indonesia</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Units</div>
+        <select id="unitSelect" class="w-full">
+          <option value="metric">Metric (m, km²)</option>
+          <option value="imperial">Imperial (ft, mi²)</option>
+        </select>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Project Management</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" id="btnNewProject">📄 New</button>
+          <button class="btn btn-sm" id="btnOpenProject">📂 Open</button>
+          <button class="btn btn-sm" id="btnSaveProject">💾 Save</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Export Data</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" id="btnExportGeoJSON">📋 GeoJSON</button>
+          <button class="btn btn-sm" id="btnExportKML">🗺️ KML</button>
+          <button class="btn btn-sm" id="btnExportCSV">📊 CSV</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Other</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" id="btnHelp">❓ Help</button>
+          <button class="btn btn-sm" id="btnAbout">ℹ️ About</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAP -->
+  <div id="map"></div>
+</div>
+
+<!-- DOCK TOOLBAR -->
+<div class="dock-toolbar">
+  <button class="dock-btn" id="btnPointer" title="Pointer">👆</button>
+  <button class="dock-btn" id="btnZoomIn" title="Zoom In">➕</button>
+  <button class="dock-btn" id="btnZoomOut" title="Zoom Out">➖</button>
+  <button class="dock-btn" id="btnLocation" title="GPS Location">📍</button>
+  <button class="dock-btn" id="btnFullscreen" title="Fullscreen">⛶</button>
+  <button class="dock-btn" id="btnPrint" title="Print">🖨️</button>
+  <button class="dock-btn" id="btnSidebar" title="Toggle Sidebar">≡</button>
+</div>
+
+<!-- WIDGETS -->
+<div class="widget-stack">
+  <div class="widget-card">
+    <span class="widget-label">Time</span>
+    <span class="widget-value" id="widgetTime">00:00:00</span>
+  </div>
+  <div class="widget-card">
+    <span class="widget-label">Coordinates</span>
+    <span class="widget-value" id="widgetCoords">0.0000, 0.0000</span>
+  </div>
+  <div class="widget-card">
+    <span class="widget-label">Elevation</span>
+    <span class="widget-value" id="widgetElevation">0 m</span>
+  </div>
+  <div class="widget-card">
+    <span class="widget-label">Scale</span>
+    <span class="widget-value" id="widgetScale">1:50,000</span>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="notification-container" id="notificationContainer"></div>
+
+<!-- MODALS -->
+<!-- Help Modal -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Help & Shortcuts</h2>
+      <button class="modal-close" onclick="closeModal('helpModal')">×</button>
+    </div>
+    <div style="font-size: 11px; line-height: 1.8;">
+      <h3 style="color: var(--primary); margin-top: 8px;">Keyboard Shortcuts</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">Ctrl+S</td>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">Save Project</td>
+        </tr>
+        <tr>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">Ctrl+O</td>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">Open Project</td>
+        </tr>
+        <tr>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">Ctrl+P</td>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">Print</td>
+        </tr>
+        <tr>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">ESC</td>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">Cancel Operation</td>
+        </tr>
+        <tr>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">+/-</td>
+          <td style="border-bottom: 1px solid var(--border); padding: 4px;">Zoom In/Out</td>
+        </tr>
+      </table>
+      <h3 style="color: var(--primary); margin-top: 8px;">Getting Started</h3>
+      <p>1. Select a drawing tool from the Tools tab</p>
+      <p>2. Click on the map to add features</p>
+      <p>3. Use Analysis tools to query data</p>
+      <p>4. Export results in multiple formats</p>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Settings</h2>
+      <button class="modal-close" onclick="closeModal('settingsModal')">×</button>
+    </div>
+    <div id="settingsContent"></div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.10.0/dist/proj4.js"></script>
+
+<script>
+// ===== API FOR ERROR HANDLING & WIDGET SAFETY =====
+const AppAPI = {
+  state: {
+    theme: localStorage.getItem('webgis_theme') || 'dark',
+    language: localStorage.getItem('webgis_lang') || 'id',
+    units: localStorage.getItem('webgis_units') || 'metric',
+    projectName: 'Untitled',
+    features: [],
+    editMode: 'view'
+  },
+
+  config: {
+    maxFeatures: 10000,
+    maxUndoSteps: 50,
+    debounceTime: 250,
+    tileServer: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+  },
+
+  // Initialize app
+  init() {
+    try {
+      this.setupMap();
+      this.setupEventListeners();
+      this.setupWidgets();
+      this.loadProject();
+      this.notify('App initialized successfully', 'success');
+    } catch (error) {
+      this.handleError('Initialization failed', error);
+    }
+  },
+
+  // Error handler with safe notification
+  handleError(message, error) {
+    console.error(message, error);
+    this.notify(`${message}: ${error?.message || 'Unknown error'}`, 'danger');
+  },
+
+  // Safe notification system
+  notify(message, type = 'info') {
+    try {
+      const container = document.getElementById('notificationContainer');
+      if (!container) return;
+
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <span>${message}</span>
+      `;
+      
+      container.appendChild(notification);
+      setTimeout(() => notification.remove(), 4000);
+    } catch (e) {
+      console.warn('Notification failed:', e);
+    }
+  },
+
+  // Setup map with safe initialization
+  setupMap() {
+    try {
+      window.map = L.map('map').setView([-6.2, 106.8], 12);
+      
+      // Base layers
+      const osmLayer = L.tileLayer(this.config.tileServer, {
+        attribution: '© OpenStreetMap',
+        maxZoom: 19
+      }).addTo(map);
+
+      this.baseLayers = {
+        'OpenStreetMap': osmLayer
+      };
+
+      // Update zoom widget
+      map.on('zoomend', () => {
+        document.getElementById('zoomLevel').textContent = map.getZoom();
+      });
+
+      // Update coordinates widget
+      map.on('mousemove', (e) => {
+        try {
+          const lat = e.latlng.lat.toFixed(4);
+          const lng = e.latlng.lng.toFixed(4);
+          document.getElementById('widgetCoords').textContent = `${lat}, ${lng}`;
+        } catch (e) {
+          console.warn('Coordinate update failed:', e);
+        }
+      });
+
+    } catch (error) {
+      this.handleError('Map setup failed', error);
+    }
+  },
+
+  setupEventListeners() {
+    // Tab system
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tabId = e.target.dataset.tab;
+        this.switchTab(tabId);
+      });
+    });
+
+    // Dock buttons
+    document.getElementById('btnZoomIn')?.addEventListener('click', () => window.map?.zoomIn());
+    document.getElementById('btnZoomOut')?.addEventListener('click', () => window.map?.zoomOut());
+    document.getElementById('btnLocation')?.addEventListener('click', () => this.requestGPS());
+    document.getElementById('btnSidebar')?.addEventListener('click', () => this.toggleSidebar());
+    document.getElementById('btnFullscreen')?.addEventListener('click', () => this.toggleFullscreen());
+    document.getElementById('btnPrint')?.addEventListener('click', () => this.printMap());
+
+    // Theme buttons
+    document.getElementById('btnThemeDark')?.addEventListener('click', () => this.setTheme('dark'));
+    document.getElementById('btnThemeLight')?.addEventListener('click', () => this.setTheme('light'));
+
+    // Settings
+    document.getElementById('btnHelp')?.addEventListener('click', () => this.openModal('helpModal'));
+    document.getElementById('btnNewProject')?.addEventListener('click', () => this.newProject());
+    document.getElementById('btnSaveProject')?.addEventListener('click', () => this.saveProject());
+
+    // Export buttons
+    document.getElementById('btnExportGeoJSON')?.addEventListener('click', () => this.exportGeoJSON());
+    document.getElementById('btnExportKML')?.addEventListener('click', () => this.exportKML());
+    document.getElementById('btnExportCSV')?.addEventListener('click', () => this.exportCSV());
+  },
+
+  setupWidgets() {
+    // Time widget
+    setInterval(() => {
+      try {
+        const now = new Date();
+        document.getElementById('widgetTime').textContent = now.toLocaleTimeString('id-ID');
+      } catch (e) {
+        console.warn('Time widget failed:', e);
+      }
+    }, 1000);
+
+    // Scale widget
+    if (window.map) {
+      window.map.on('zoomend moveend', () => {
+        try {
+          const bounds = window.map.getBounds();
+          const distance = bounds.getNorthWest().distanceTo(bounds.getNorthEast());
+          const scale = Math.round(distance / 256);
+          document.getElementById('widgetScale').textContent = `1:${scale.toLocaleString()}`;
+        } catch (e) {
+          console.warn('Scale widget failed:', e);
+        }
+      });
+    }
+  },
+
+  switchTab(tabId) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    document.getElementById(`tab-${tabId}`)?.classList.add('active');
+    event.target?.classList.add('active');
+  },
+
+  toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar?.classList.toggle('show');
+  },
+
+  toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn('Fullscreen failed:', err);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    } catch (e) {
+      this.handleError('Fullscreen toggle failed', e);
+    }
+  },
+
+  setTheme(theme) {
+    try {
+      this.state.theme = theme;
+      document.body.classList.toggle('light-theme', theme === 'light');
+      localStorage.setItem('webgis_theme', theme);
+      this.notify(`Theme changed to ${theme}`, 'success');
+    } catch (e) {
+      this.handleError('Theme change failed', e);
+    }
+  },
+
+  requestGPS() {
+    try {
+      if (!navigator.geolocation) {
+        this.notify('Geolocation not supported', 'warning');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude, accuracy } = position.coords;
+          window.map.setView([latitude, longitude], 15);
+          L.circleMarker([latitude, longitude], {
+            radius: 8,
+            color: '#22c55e',
+            weight: 2,
+            fillOpacity: 0.6
+          }).addTo(window.map).bindPopup(`You are here<br>Accuracy: ${accuracy}m`);
+          
+          this.notify(`GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 'success');
+        },
+        (error) => {
+          this.handleError('GPS failed', error);
+        }
+      );
+    } catch (e) {
+      this.handleError('GPS request failed', e);
+    }
+  },
+
+  printMap() {
+    try {
+      window.print();
+      this.notify('Print dialog opened', 'success');
+    } catch (e) {
+      this.handleError('Print failed', e);
+    }
+  },
+
+  exportGeoJSON() {
+    try {
+      const data = JSON.stringify(this.state.features, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${this.state.projectName}.geojson`;
+      a.click();
+      this.notify('GeoJSON exported', 'success');
+    } catch (e) {
+      this.handleError('GeoJSON export failed', e);
+    }
+  },
+
+  exportKML() {
+    this.notify('KML export coming soon', 'info');
+  },
+
+  exportCSV() {
+    try {
+      let csv = 'id,name,type,lat,lng\n';
+      this.state.features.forEach(f => {
+        csv += `${f.id},"${f.name}","${f.type}",${f.lat},${f.lng}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${this.state.projectName}.csv`;
+      a.click();
+      this.notify('CSV exported', 'success');
+    } catch (e) {
+      this.handleError('CSV export failed', e);
+    }
+  },
+
+  saveProject() {
+    try {
+      const project = {
+        name: this.state.projectName,
+        features: this.state.features,
+        theme: this.state.theme,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('webgis_project', JSON.stringify(project));
+      this.notify(`Project "${this.state.projectName}" saved`, 'success');
+    } catch (e) {
+      this.handleError('Project save failed', e);
+    }
+  },
+
+  loadProject() {
+    try {
+      const saved = localStorage.getItem('webgis_project');
+      if (saved) {
+        const project = JSON.parse(saved);
+        this.state.features = project.features || [];
+        this.state.projectName = project.name || 'Untitled';
+        document.getElementById('projectName').textContent = this.state.projectName;
+      }
+    } catch (e) {
+      console.warn('Project load failed:', e);
+    }
+  },
+
+  newProject() {
+    if (confirm('Create new project? Unsaved data will be lost.')) {
+      this.state.features = [];
+      this.state.projectName = 'Untitled';
+      document.getElementById('projectName').textContent = 'Untitled';
+      this.notify('New project created', 'success');
+    }
+  },
+
+  openModal(modalId) {
+    try {
+      document.getElementById(modalId)?.classList.add('show');
+    } catch (e) {
+      console.warn('Modal open failed:', e);
+    }
+  }
+};
+
+// Global function for modal closing
+function closeModal(modalId) {
+  try {
+    document.getElementById(modalId)?.classList.remove('show');
+  } catch (e) {
+    console.warn('Modal close failed:', e);
+  }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  try {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 's') {
+        e.preventDefault();
+        AppAPI.saveProject();
+      }
+      if (e.key === 'o') {
+        e.preventDefault();
+        AppAPI.openModal('settingsModal');
+      }
+      if (e.key === 'p') {
+        e.preventDefault();
+        AppAPI.printMap();
+      }
+    }
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+      AppAPI.notify('Operation cancelled', 'info');
+    }
+  } catch (e) {
+    console.warn('Keyboard shortcut failed:', e);
+  }
+});
+
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  AppAPI.init();
+});
+
+// Apply theme on load
+if (localStorage.getItem('webgis_theme') === 'light') {
+  document.body.classList.add('light-theme');
+}
+</script>
+
+<!-- Advanced Features Extension -->
+<script src="advanced-features.js"></script>
+
+<!-- UI Integration for Advanced Features -->
+<script>
+// Add advanced feature buttons to the enhanced UI
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    // Add to Analysis tab
+    const analysisTab = document.getElementById('tab-analysis');
+    if (analysisTab) {
+      const advancedSection = document.createElement('div');
+      advancedSection.className = 'sidebar-section';
+      advancedSection.innerHTML = `
+        <div class="section-title">Advanced Analysis</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" onclick="HeatmapModule.toggleHeatmap()" title="Toggle Heatmap">🔥</button>
+          <button class="btn btn-sm" onclick="ClusteringModule.toggleClustering()" title="Toggle Clustering">📍</button>
+          <button class="btn btn-sm" onclick="ComparisonModule.compareFeatures()" title="Compare Features">⚖️</button>
+          <button class="btn btn-sm" onclick="AnnotationModule.toggleAnnotationMode()" title="Annotation Mode">📝</button>
+        </div>
+      `;
+      analysisTab.appendChild(advancedSection);
+
+      const elevationSection = document.createElement('div');
+      elevationSection.className = 'sidebar-section';
+      elevationSection.innerHTML = `
+        <div class="section-title">Additional Tools</div>
+        <div class="btn-group">
+          <button class="btn btn-sm w-full" onclick="WeatherModule.fetchWeather(window.map.getCenter().lat, window.map.getCenter().lng)">🌤️ Get Weather</button>
+        </div>
+      `;
+      analysisTab.appendChild(elevationSection);
+    }
+
+    // Add to Settings tab
+    const settingsTab = document.getElementById('tab-settings');
+    if (settingsTab) {
+      const themeSection = document.createElement('div');
+      themeSection.className = 'sidebar-section';
+      themeSection.innerHTML = `
+        <div class="section-title">Advanced Themes</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" onclick="StylingModule.applyTheme('minimal')">Minimal</button>
+          <button class="btn btn-sm" onclick="StylingModule.applyTheme('vibrant')">Vibrant</button>
+          <button class="btn btn-sm" onclick="StylingModule.applyTheme('professional')">Pro</button>
+        </div>
+      `;
+      settingsTab.appendChild(themeSection);
+
+      const batchSection = document.createElement('div');
+      batchSection.className = 'sidebar-section';
+      batchSection.innerHTML = `
+        <div class="section-title">Batch Operations</div>
+        <input type="file" id="batchImportInput" multiple accept=".geojson,.json,.gpx" style="display: none;" />
+        <div class="btn-group">
+          <button class="btn btn-sm w-full" onclick="document.getElementById('batchImportInput').click()">📤 Batch Import</button>
+          <button class="btn btn-sm w-full" onclick="BatchModule.exportBatch('geojson')">📥 Export All</button>
+        </div>
+      `;
+      settingsTab.appendChild(batchSection);
+
+      // Handle batch import
+      document.getElementById('batchImportInput').addEventListener('change', (e) => {
+        BatchModule.importBatch(e.target.files);
+      });
+    }
+
+  } catch (error) {
+    console.warn('Advanced features UI integration failed:', error);
+  }
+});
+</script>
+
+</body>
+</html>

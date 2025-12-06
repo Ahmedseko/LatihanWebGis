@@ -444,10 +444,28 @@
       }
 
       .map-top-bar {
-        bottom: 12px;
+        position: fixed !important;
+        bottom: 14px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 1100 !important;
+        padding: 6px 12px !important;
+        gap: 4px !important;
+        max-width: 95vw !important;
+        overflow-x: auto !important;
+      }
+      
+      .dock-btn {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 14px !important;
+        margin: 0 1px !important;
+        flex-shrink: 0;
       }
 
       .map-measure-info {
+        top: 12px;
+      }
         top: 10px;
       }
     
@@ -928,17 +946,22 @@ body.light-theme #widgetSpeed {
 /* ==== SEKO FIELD MOBILE V3.1 – fine-tune widgets, zoom & navigator ==== */
 @media (max-width: 768px) {
 
-  /* Extra compact widgets */
+  /* Extra compact widgets - positioned at top-right, above dock */
   .widget-stack {
     transform: scale(0.64);
     transform-origin: top right;
     top: 6px !important;
     right: 6px !important;
     gap: 4px !important;
+    z-index: 1050 !important;
+    max-height: 50vh !important;
+    overflow-y: auto !important;
+    pointer-events: auto !important;
   }
   .widget-gadget {
     width: 180px !important;
     font-size: 9px !important;
+    pointer-events: auto !important;
   }
   .widget-title {
     font-size: 9px !important;
@@ -947,22 +970,29 @@ body.light-theme #widgetSpeed {
     padding: 3px 6px !important;
   }
 
-  /* Zoom control: lift above dock, more visible */
+  /* Zoom control: positioned above dock with proper spacing */
   .leaflet-control-zoom {
     position: fixed !important;
-    right: 10px !important;
-    bottom: 82px !important;
-    z-index: 1500 !important;
+    right: 12px !important;
+    bottom: 90px !important;
+    z-index: 950 !important;
+    background: rgba(15,23,42,0.95) !important;
+    border: 1px solid rgba(148,163,184,0.7) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important;
+  }
+  
+  .leaflet-control-zoom a {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    line-height: 32px !important;
+    text-align: center !important;
   }
 
-  /* Navigator: ensure visible above dock */
+  /* Navigator: hidden on mobile */
   .navigator-wrapper {
-    position: fixed !important;
-    right: 76px !important;
-    bottom: 82px !important;
-    top: auto !important;
-    transform: none !important;
-    z-index: 1450 !important;
+    display: none !important;
   }
 }
 
@@ -1036,13 +1066,13 @@ body.light-theme #widgetSpeed {
     z-index: 1240;
   }
 
-  /* Toggle button for panel */
+  /* Toggle button for panel - positioned left of dock */
   .mobile-sidebar-toggle {
     position: fixed;
-    left: 50%;
-    bottom: 18px;
-    transform: translateX(-50%);
-    padding: 8px 16px;
+    left: 12px;
+    bottom: 14px;
+    transform: none;
+    padding: 6px 12px;
     border-radius: 999px;
     border: 1px solid rgba(148,163,184,0.7);
     background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(15,23,42,0.85));
@@ -1050,9 +1080,9 @@ body.light-theme #widgetSpeed {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-    z-index: 1300;
+    font-size: 11px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    z-index: 1099;
   }
 }
 
