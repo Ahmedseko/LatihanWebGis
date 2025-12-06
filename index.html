@@ -925,13 +925,124 @@ body.light-theme #widgetSpeed {
   }
 }
 
-/* === MOBILE SIDEBAR BUTTON (FAB) === */
+/* ==== SEKO FIELD MOBILE V3.1 – fine-tune widgets, zoom & navigator ==== */
 @media (max-width: 768px) {
+
+  /* Extra compact widgets */
+  .widget-stack {
+    transform: scale(0.64);
+    transform-origin: top right;
+    top: 6px !important;
+    right: 6px !important;
+    gap: 4px !important;
+  }
+  .widget-gadget {
+    width: 180px !important;
+    font-size: 9px !important;
+  }
+  .widget-title {
+    font-size: 9px !important;
+  }
+  .widget-content {
+    padding: 3px 6px !important;
+  }
+
+  /* Zoom control: lift above dock, more visible */
+  .leaflet-control-zoom {
+    position: fixed !important;
+    right: 10px !important;
+    bottom: 82px !important;
+    z-index: 1500 !important;
+  }
+
+  /* Navigator: ensure visible above dock */
+  .navigator-wrapper {
+    position: fixed !important;
+    right: 76px !important;
+    bottom: 82px !important;
+    top: auto !important;
+    transform: none !important;
+    z-index: 1450 !important;
+  }
+}
+
+</style>
+
+<style>
+/* ===== MOBILE LAYOUT FIX OVERRIDE ===== */
+@media (max-width: 768px) {
+
+  /* App in column so map not squeezed horizontally */
+  .app {
+    flex-direction: column;
+  }
+
+  /* Sidebar as bottom sheet overlay, not pushing map */
+  .sidebar {
+    position: fixed !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 55vh;
+    border-radius: 18px 18px 0 0;
+    overflow-y: auto;
+    z-index: 1200;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out, box-shadow 0.25s ease-out;
+  }
+
+  .sidebar.sidebar--open {
+    transform: translateY(0);
+    box-shadow: 0 -20px 40px rgba(0,0,0,0.65);
+  }
+
+  /* Map always full height behind sheets */
+  .map-wrapper,
+  #map {
+    height: 100vh !important;
+  }
+
+  /* Widgets smaller & tucked to top-right */
+  .widgets-panel {
+    top: 8px;
+    right: 8px;
+    transform: scale(0.8);
+    transform-origin: top right;
+    z-index: 1100;
+  }
+
+  .widget-card {
+    font-size: 11px;
+  }
+
+  /* Dock floats above bottom sheet */
+  .dock {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 72px;
+    z-index: 1250;
+  }
+
+  /* Navigator smaller & above dock */
+  .navigator-wrapper {
+    bottom: 150px;
+    right: 12px;
+    transform: scale(0.8);
+    transform-origin: bottom right;
+    z-index: 1240;
+  }
+
+  /* Toggle button for panel */
   .mobile-sidebar-toggle {
     position: fixed;
-    left: 16px;
-    bottom: 92px;
-    padding: 8px 14px;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    padding: 8px 16px;
     border-radius: 999px;
     border: 1px solid rgba(148,163,184,0.7);
     background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(15,23,42,0.85));
@@ -941,15 +1052,11 @@ body.light-theme #widgetSpeed {
     gap: 6px;
     font-size: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-    z-index: 2000;
-  }
-  body.light-theme .mobile-sidebar-toggle {
-    background: #f3f4f6;
-    color: #111827;
-    border-color: #d1d5db;
+    z-index: 1300;
   }
 }
 
+/* hide mobile toggle on real desktop */
 @media (min-width: 769px) {
   .mobile-sidebar-toggle {
     display: none !important;
@@ -1145,7 +1252,6 @@ body.light-theme #widgetSpeed {
   <!-- MAP -->
   <div class="map-wrapper">
     <div id="map"></div>
-    <button id="mobileSidebarBtn" class="mobile-sidebar-toggle">☰ Panel &amp; Tools</button>
 
     <!-- NAVIGATOR CONTROL -->
     <div class="navigator-wrapper">
@@ -2383,14 +2489,6 @@ body.light-theme #widgetSpeed {
     sidebarEl.classList.toggle('hidden');
     setTimeout(() => map.invalidateSize(), 300);
   });
-  // === MOBILE SIDEBAR TOGGLE BUTTON ===
-  const mobileSidebarBtn = document.getElementById('mobileSidebarBtn');
-  if (mobileSidebarBtn && toggleSidebarBtn) {
-    mobileSidebarBtn.addEventListener('click', () => {
-      toggleSidebarBtn.click();
-    });
-  }
-
 
   // ====== MEASURE TOOLS ======
   function updateMeasureInfoTextDistance(hasResult, distM, distKm) {
@@ -3160,5 +3258,32 @@ body.light-theme #widgetSpeed {
   // Pastikan map di-render dengan benar
   setTimeout(() => map.invalidateSize(), 100);
 </script>
+
+<button class="mobile-sidebar-toggle" id="mobileSidebarToggle">
+  <span>⬆</span> Panel &amp; Tools
+</button>
+
+
+<script>
+// basic mobile sidebar toggle
+(function(){
+  const btn = document.getElementById('mobileSidebarToggle');
+  const sidebar = document.querySelector('.sidebar');
+  if(!btn || !sidebar) return;
+  function setLabel(open){
+    btn.innerHTML = open ? '<span>⬇</span> Tutup Panel' : '<span>⬆</span> Panel &amp; Tools';
+  }
+  btn.addEventListener('click', ()=>{
+    const open = sidebar.classList.toggle('sidebar--open');
+    setLabel(open);
+  });
+  // close panel by default on small screens
+  if (window.innerWidth <= 768) {
+    sidebar.classList.remove('sidebar--open');
+    setLabel(false);
+  }
+})();
+</script>
+
 </body>
 </html>
